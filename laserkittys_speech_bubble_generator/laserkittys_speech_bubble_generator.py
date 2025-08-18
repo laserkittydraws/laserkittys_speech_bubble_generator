@@ -1,208 +1,243 @@
-from PyQt5.QtGui import QColor, QFontMetrics, QIcon, QPixmap
-from PyQt5.QtWidgets import QApplication, QCheckBox, QColorDialog, QFontComboBox, QGroupBox, QLabel, QMainWindow, QPushButton, QRadioButton, QSlider, QSpinBox, QTextEdit, QVBoxLayout, QHBoxLayout, QWidget, QScrollArea
+from PyQt5.QtGui import QColor, QFontMetrics, QFontMetricsF, QIcon, QPixmap, QResizeEvent
+from PyQt5.QtWidgets import QApplication, QCheckBox, QColorDialog, QFontComboBox, QGroupBox, QLabel, QMainWindow, QPushButton, QRadioButton, QSlider, QSpinBox, QTextEdit, QVBoxLayout, QHBoxLayout, QWidget, QScrollArea, QScrollBar, QSizePolicy
 from PyQt5.QtSvg import QSvgWidget
-from PyQt5.QtCore import Qt
-from krita import *
+from PyQt5.QtCore import Qt, QRect, QSize
 
+from krita import Krita, DockWidget, DockWidgetFactory, DockWidgetFactoryBase
 
+from math import cos, sin, acos, asin, sqrt, pi
+import xml.etree.ElementTree as ET
+from datetime import datetime
 
-class BubbleCoordinates():
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
+import logging
+logger = logging.getLogger('lsbg')
+LSBG_DEBUG = 15 ; logging.addLevelName(LSBG_DEBUG, 'LSBG_DEBUG')
+logging.basicConfig(
+    filename=f'{Krita.getAppDataLocation()}/pykrita/laserkittys_speech_bubble_generator/logs/lsbg_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log',
+    format='%(asctime)s: %(name)s - [%(levelname)s] - %(message)s',
+    level=LSBG_DEBUG
+)
+logger.info(f'Krita version: {Application.version()}')
+LSBG_PLUGIN_VERSION = '0.0.1' ; logger.info(f'LSBG version: {LSBG_PLUGIN_VERSION}')
 
 class LSBGDocker(DockWidget):
 
     def __init__(self):
         super().__init__()
         self.setWindowTitle("LaserKitty's speech bubble generator")
-        mainLayout = QVBoxLayout()
+        self.mainLayout = QVBoxLayout()
 
         self.addOnPage = QPushButton("Add on Page")
-        mainLayout.addWidget(self.addOnPage)
+        self.mainLayout.addWidget(self.addOnPage)
 
         previewLabel = QLabel("Preview")
-        mainLayout.addWidget(previewLabel)
+        self.mainLayout.addWidget(previewLabel)
 
         self.preview = QSvgWidget(self)
-        self.preview.setMinimumHeight(200)
-        mainLayout.addWidget(self.preview)
-
-
+        self.preview.setFixedSize(300,200)
+        self.preview.renderer().setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
+        self.mainLayout.addWidget(self.preview)
 
         # MARK: bubble params
-        bubbleTypes = QGroupBox()
-        bubbleTypes.setTitle("Bubble type")
-        bubbleTypesLayout = QHBoxLayout()
+        self.bubbleTypes = QGroupBox()
+        self.bubbleTypes.setTitle("Bubble type")
+        self.bubbleTypesLayout = QHBoxLayout()
 
         self.roundBubble = QRadioButton(self)
         self.roundBubble.setText("Round")
         self.roundBubble.setChecked(True)
-        bubbleTypesLayout.addWidget(self.roundBubble)
+        self.bubbleTypesLayout.addWidget(self.roundBubble)
 
         self.squareBubble = QRadioButton(self)
         self.squareBubble.setText("Square")
-        bubbleTypesLayout.addWidget(self.squareBubble)
+        self.bubbleTypesLayout.addWidget(self.squareBubble)
+
+        self.squircleBubble = QRadioButton(self)
+        self.squircleBubble.setText("Squircle")
+        self.bubbleTypesLayout.addWidget(self.squircleBubble)
 
         #MARK: >>TODO<<
         # TODO: Add other bubble types
-        
-        # self.squircleBubble = QRadioButton(self)
-        # self.squircleBubble.setText("Squircle")
-        # bubbleTypesLayout.addWidget(self.squircleBubble)
-
-        bubbleTypes.setLayout(bubbleTypesLayout)
 
         self.bubbleColorButton = QPushButton(self)
         self.bubbleColor = QColor("white")
-        bubbleColorImage = QPixmap(32,32)
-        bubbleColorImage.fill(self.bubbleColor)
-        bubbleColorIcon = QIcon(bubbleColorImage)
-        self.bubbleColorButton.setIcon(bubbleColorIcon)
+        self.bubbleColorImage = QPixmap(32,32)
+        self.bubbleColorImage.fill(self.bubbleColor)
+        self.bubbleColorIcon = QIcon(self.bubbleColorImage)
+        self.bubbleColorButton.setIcon(self.bubbleColorIcon)
         self.bubbleColorButton.setFixedWidth(self.bubbleColorButton.height())
-        bubbleTypesLayout.addWidget(self.bubbleColorButton)
+        self.bubbleTypesLayout.addWidget(self.bubbleColorButton)
 
-        mainLayout.addWidget(bubbleTypes)
+        self.bubbleTypes.setLayout(self.bubbleTypesLayout)
+        self.mainLayout.addWidget(self.bubbleTypes)
 
 
 
         # MARK:outline params
-        outlineSize = QGroupBox("Outline")
-        bOutlineThicknessLayout = QHBoxLayout()
+        self.outlineSize = QGroupBox("Outline")
+        self.bOutlineThicknessLayout = QHBoxLayout()
 
         self.bOutlineThicknessSlider = QSlider(self)
         self.bOutlineThicknessSlider.setMinimum(0)
         self.bOutlineThicknessSlider.setMaximum(10)
         self.bOutlineThicknessSlider.setValue(3)
         self.bOutlineThicknessSlider.setOrientation(Qt.Orientation.Horizontal)
-        bOutlineThicknessLayout.addWidget(self.bOutlineThicknessSlider)
+        self.bOutlineThicknessLayout.addWidget(self.bOutlineThicknessSlider)
 
         self.bOutlineThicknessSpinBox = QSpinBox(self)
         self.bOutlineThicknessSpinBox.setMinimum(0)
         self.bOutlineThicknessSpinBox.setValue(3)
-        bOutlineThicknessLayout.addWidget(self.bOutlineThicknessSpinBox)
+        self.bOutlineThicknessLayout.addWidget(self.bOutlineThicknessSpinBox)
 
         self.bOutlineColorButton = QPushButton(self)
         self.outlineColor = QColor("black")
-        outlineColorImage = QPixmap(32,32)
-        outlineColorImage.fill(self.outlineColor)
-        outlineColorIcon = QIcon(outlineColorImage)
-        self.bOutlineColorButton.setIcon(outlineColorIcon)
+        self.outlineColorImage = QPixmap(32,32)
+        self.outlineColorImage.fill(self.outlineColor)
+        self.outlineColorIcon = QIcon(self.outlineColorImage)
+        self.bOutlineColorButton.setIcon(self.outlineColorIcon)
         self.bOutlineColorButton.setFixedWidth(self.bOutlineColorButton.height())
-        bOutlineThicknessLayout.addWidget(self.bOutlineColorButton)
+        self.bOutlineThicknessLayout.addWidget(self.bOutlineColorButton)
 
-        outlineSize.setLayout(bOutlineThicknessLayout)
-        mainLayout.addWidget(outlineSize)
+        self.outlineSize.setLayout(self.bOutlineThicknessLayout)
+        self.mainLayout.addWidget(self.outlineSize)
 
 
 
         # MARK:text params
-        speechGroup = QGroupBox("Speech")
-        speechGroupLayout = QVBoxLayout()
+        self.speechGroup = QGroupBox("Speech")
+        self.speechGroupLayout = QVBoxLayout()
 
-        fontRow = QHBoxLayout()
+        self.fontRow = QHBoxLayout()
 
-        self.speechFont = QFontComboBox(self) 
-        fontRow.addWidget(self.speechFont)
+        self.speechFont = QFontComboBox(self)
+        self.fontRow.addWidget(self.speechFont)
 
         self.speechFontSize = QSpinBox(self)
         self.speechFontSize.setValue(14)
         self.speechFontSize.setMinimum(1)
-        fontRow.addWidget(self.speechFontSize)
+        self.fontRow.addWidget(self.speechFontSize)
 
         self.currentFontColorButton = QPushButton(self)
         self.speechFontColor = QColor("black")
-        fontColorImage = QPixmap(32,32)
-        fontColorImage.fill(self.speechFontColor)
-        fontColorIcon = QIcon(fontColorImage)
-        self.currentFontColorButton.setIcon(fontColorIcon)
+        self.fontColorImage = QPixmap(32,32)
+        self.fontColorImage.fill(self.speechFontColor)
+        self.fontColorIcon = QIcon(self.fontColorImage)
+        self.currentFontColorButton.setIcon(self.fontColorIcon)
         self.currentFontColorButton.setFixedWidth(self.currentFontColorButton.height())
-        fontRow.addWidget(self.currentFontColorButton)
+        self.fontRow.addWidget(self.currentFontColorButton)
 
-        speechGroupLayout.addLayout(fontRow)
+        self.speechGroupLayout.addLayout(self.fontRow)
 
 
 
         # MARK: misc
-        self.bubbleText = QTextEdit("Rogudator's speech bubble generator!")
-        speechGroupLayout.addWidget(self.bubbleText)
+        self.bubbleText = QTextEdit("Laserkitty's speech bubble generator!")
+        self.speechGroupLayout.addWidget(self.bubbleText)
 
         self.autocenter = QCheckBox(self)
         self.autocenter.setText("Center automatically")
         self.autocenter.setChecked(True)
-        speechGroupLayout.addWidget(self.autocenter)
+        self.speechGroupLayout.addWidget(self.autocenter)
+
 
         self.averageLineLength = QGroupBox()
-        averageLineLengthSliderAndSpinBox = QHBoxLayout()
+        self.avgLineLenSliderAndSpinBox = QHBoxLayout()
+
         self.averageLineLengthSlider = QSlider(self)
         self.averageLineLengthSlider.setMinimum(0)
         self.averageLineLengthSlider.setMaximum(100)
         self.averageLineLengthSlider.setOrientation(Qt.Orientation.Horizontal)
-        averageLineLengthSliderAndSpinBox.addWidget(self.averageLineLengthSlider)
+        self.avgLineLenSliderAndSpinBox.addWidget(self.averageLineLengthSlider)
 
         self.averageLineLengthSpinBox = QSpinBox(self)
         self.averageLineLengthSpinBox.setMinimum(0)
-        averageLineLengthSliderAndSpinBox.addWidget(self.averageLineLengthSpinBox)
-        self.averageLineLength.setLayout(averageLineLengthSliderAndSpinBox)
+        self.avgLineLenSliderAndSpinBox.addWidget(self.averageLineLengthSpinBox)
+        
+        self.averageLineLength.setLayout(self.avgLineLenSliderAndSpinBox)
         self.averageLineLength.setDisabled(True)
-        speechGroupLayout.addWidget(self.averageLineLength)
+        self.speechGroupLayout.addWidget(self.averageLineLength)
 
-        speechGroup.setLayout(speechGroupLayout)
-        mainLayout.addWidget(speechGroup)
+        self.speechGroup.setLayout(self.speechGroupLayout)
+        self.mainLayout.addWidget(self.speechGroup)
 
 
 
         # MARK:bubble tail params
-        tailSize = QGroupBox()
-        tailSize.setTitle("Tail size")
-        tailSliderAndSpinBox = QHBoxLayout()
-        self.tailSizeSlider = QSlider(self)
-        self.tailSizeSlider.setMinimum(0)
-        self.tailSizeSlider.setMaximum(self.speechFontSize.value()*10)
-        self.tailSizeSlider.setOrientation(Qt.Orientation.Horizontal)
-        tailSliderAndSpinBox.addWidget(self.tailSizeSlider)
+        self.tailSize = QGroupBox()
+        self.tailSize.setTitle("Tail size")
+        self.tLenWidth = QVBoxLayout()
 
-        self.tailSpinBox = QSpinBox(self)
-        self.tailSpinBox.setMinimum(0)
-        self.tailSpinBox.setMaximum(self.speechFontSize.value()*10)
-        tailSliderAndSpinBox.addWidget(self.tailSpinBox)
-        tailSize.setLayout(tailSliderAndSpinBox)
-        mainLayout.addWidget(tailSize)
 
-        #MARK:>>TODO<<
-        # TODO: change to angle input, options for 90 degree movements CW and CCW as well as 180 flip
+        self.tLenSliderAndSpinBox = QHBoxLayout()
+        self.tLengthLabel = QLabel("Tail Length:")
+        self.tLenSliderAndSpinBox.addWidget(self.tLengthLabel)
+
+        self.tLengthSlider = QSlider(self)
+        self.tLengthSlider.setMinimum(0)
+        self.tLengthSlider.setMaximum(self.speechFontSize.value()*10)
+        self.tLengthSlider.setOrientation(Qt.Orientation.Horizontal)
+        self.tLenSliderAndSpinBox.addWidget(self.tLengthSlider)
+
+        self.tLengthSpinBox = QSpinBox(self)
+        self.tLengthSpinBox.setMinimum(0)
+        self.tLengthSpinBox.setMaximum(self.speechFontSize.value()*10)
+        self.tLengthSpinBox.setValue(10)
+        self.tLenSliderAndSpinBox.addWidget(self.tLengthSpinBox)
+        self.tLenWidth.addLayout(self.tLenSliderAndSpinBox)
+
+
+        self.tWidthSliderAndSpinBox = QHBoxLayout()
+        self.tWidthLabel = QLabel("Tail Width:")
+        self.tWidthSliderAndSpinBox.addWidget(self.tWidthLabel)
+
+        self.tWidthSlier = QSlider(self)
+        self.tWidthSlier.setMinimum(0)
+        self.tWidthSlier.setMaximum(self.speechFontSize.value()*10)
+        self.tWidthSlier.setOrientation(Qt.Orientation.Horizontal)
+        self.tWidthSliderAndSpinBox.addWidget(self.tWidthSlier)
+
+        self.tWidthSpinBox = QSpinBox(self)
+        self.tWidthSpinBox.setMinimum(0)
+        self.tWidthSpinBox.setMaximum(self.speechFontSize.value()*10)
+        self.tWidthSliderAndSpinBox.addWidget(self.tWidthSpinBox)
+        self.tLenWidth.addLayout(self.tWidthSliderAndSpinBox)
+
+        self.tailSize.setLayout(self.tLenWidth)
+        self.mainLayout.addWidget(self.tailSize)
 
         self.tailPositions = QGroupBox()
         self.tailPositions.setTitle("Tail position")
-        tailPositionsLayout = QHBoxLayout()
+        self.tailPositionsLayout = QHBoxLayout()
 
-        self.tailPosition = []
-        for i in range(8):
-            self.tailPosition.append(QRadioButton(self))
-            self.tailPosition[i].setText(str(i + 1))
-            self.tailPosition[i].clicked.connect(self.updatePreview)
-            tailPositionsLayout.addWidget(self.tailPosition[i])
+        self.tailAnglePositionSlider = QSlider(self)
+        self.tailAnglePositionSlider.setMinimum(0)
+        self.tailAnglePositionSlider.setMaximum(360)
+        self.tailAnglePositionSlider.setValue(45)
+        self.tailAnglePositionSlider.setOrientation(Qt.Orientation.Horizontal)
+        self.tailPositionsLayout.addWidget(self.tailAnglePositionSlider)
         
-        # self.tailPositionSlider = QSlider(self)
-        # self.tailPositionSlider.setMinimum(0)
-        # self.tailPositionSlider.setMaximum(360)
-        # self.tailPositionSlider.setValue(45)
-        # self.tailPositionSlider.setOrientation(Qt.Orientation.Horizontal)
-        # tailPositionsLayout.addWidget(self.tailPositionSlider)
-        
-        # self.tailPositionSpinBox = QSpinBox(self)
-        # self.tailPositionSpinBox.setMinimum(0)
-        # self.tailPositionSpinBox.setMaximum(360)
-        # self.tailPositionSpinBox.setValue(45)
-        # tailPositionsLayout.addWidget(self.tailPositionSpinBox)
-        
-        self.tailPositions.setLayout(tailPositionsLayout)
-        self.tailPositions.setDisabled(True)
+        self.tailAnglePositionSpinBox = QSpinBox(self)
+        self.tailAnglePositionSpinBox.setMinimum(0)
+        self.tailAnglePositionSpinBox.setMaximum(360)
+        self.tailAnglePositionSpinBox.setValue(45)
+        self.tailPositionsLayout.addWidget(self.tailAnglePositionSpinBox)
 
-        mainLayout.addWidget(self.tailPositions)
+        self.flipAngleH = QPushButton()
+        self.flipAngleH.setIcon(QIcon(Krita.instance().icon('flip_angle_h')))
+        self.tailPositionsLayout.addWidget(self.flipAngleH)
+        self.flipAngleV = QPushButton()
+        self.flipAngleV.setIcon(QIcon(Krita.instance().icon('flip_angle_v')))
+        self.tailPositionsLayout.addWidget(self.flipAngleV)
+        self.flipAngleHV = QPushButton()
+        self.flipAngleHV.setIcon(QIcon(Krita.instance().icon('flip_angle_hv')))
+        self.tailPositionsLayout.addWidget(self.flipAngleHV)
 
-        self.updatePreview()
+        # TODO: change tail position angle selector to AngleSelector when krita 5.3 or 5.2.12 releases
+        # self.angleSelector = AngleSelector()
+        # tailPositionsLayout.addWidget(self.angleSelector)
+
+        self.tailPositions.setLayout(self.tailPositionsLayout)
+        self.mainLayout.addWidget(self.tailPositions)
 
 
 
@@ -227,12 +262,17 @@ class LSBGDocker(DockWidget):
         self.currentFontColorButton.clicked.connect(self.changeFontColor)
         self.speechFont.currentFontChanged.connect(self.updatePreview)
         self.autocenter.stateChanged.connect(self.enableAverageLineLength)
-        self.averageLineLengthSlider.valueChanged.connect(self.averageLineLengthSpinBoxUpdate)
-        self.averageLineLengthSpinBox.valueChanged.connect(self.averageLineLengthSliderUpdate)
+        self.averageLineLengthSlider.valueChanged.connect(self.avgLineLenSpinBoxUpdate)
+        self.averageLineLengthSpinBox.valueChanged.connect(self.avgLineLenSliderUpdate)
 
         # bubble tail param signals
-        self.tailSizeSlider.valueChanged.connect(self.tailSpinBoxUpdate)
-        self.tailSpinBox.valueChanged.connect(self.tailSliderUpdate)
+        self.tLengthSlider.valueChanged.connect(self.tailSpinBoxUpdate)
+        self.tLengthSpinBox.valueChanged.connect(self.tailSliderUpdate)
+        self.tailAnglePositionSlider.valueChanged.connect(self.tailPositionSpinBoxUpdate)
+        self.tailAnglePositionSpinBox.valueChanged.connect(self.tailPositionSliderUpdate)
+        self.flipAngleH.clicked.connect(self.flipAngleH_f)
+        self.flipAngleH.clicked.connect(self.flipAngleV_f)
+        self.flipAngleH.clicked.connect(self.flipAngleHV_f)
 
 
 
@@ -240,11 +280,12 @@ class LSBGDocker(DockWidget):
         self.scrollMainLayout.setWidgetResizable(True)
         self.scrollMainLayout.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
-        widget = QWidget()
-        widget.setLayout(mainLayout)
-        self.scrollMainLayout.setWidget(widget)
+        self.qw = QWidget()
+        self.qw.setLayout(self.mainLayout)
+        self.scrollMainLayout.setWidget(self.qw)
         self.setWidget(self.scrollMainLayout)
         self.show()
+        self.updatePreview()
 
 
 
@@ -259,8 +300,8 @@ class LSBGDocker(DockWidget):
         self.updatePreview()
 
     def tailSliderUpdateMaximum(self):
-        self.tailSizeSlider.setMaximum(self.speechFontSize.value()*10)
-        self.tailSpinBox.setMaximum(self.speechFontSize.value()*10)
+        self.tLengthSlider.setMaximum(self.speechFontSize.value()*10)
+        self.tLengthSpinBox.setMaximum(self.speechFontSize.value()*10)
         self.updatePreview()
 
     def changeBubbleColor(self):
@@ -281,183 +322,176 @@ class LSBGDocker(DockWidget):
 
     def outlineSpinBoxUpdate(self):
         self.bOutlineThicknessSpinBox.setValue(self.bOutlineThicknessSlider.value())
+        self.updatePreview()
 
     def outlineSliderUpdate(self):
-        if self.bOutlineThicknessSpinBox.value() < 51:
-            self.bOutlineThicknessSlider.setValue(self.bOutlineThicknessSpinBox.value())
+        if self.bOutlineThicknessSpinBox.value() < 51: self.bOutlineThicknessSlider.setValue(self.bOutlineThicknessSpinBox.value())
         self.updatePreview()
 
     def tailSpinBoxUpdate(self):
-        self.tailSpinBox.setValue(self.tailSizeSlider.value())
-        if self.tailSizeSlider.value() == 0:
-            self.tailPositions.setDisabled(True)
-        else:
-            self.tailPositions.setDisabled(False)
+        self.tLengthSpinBox.setValue(self.tLengthSlider.value())
+        self.tailPositions.setDisabled(self.tLengthSlider.value() == 0)
 
     def tailSliderUpdate(self):
-        if self.tailSpinBox.value()<101:
-            self.tailSizeSlider.setValue(self.tailSpinBox.value())
+        if self.tLengthSpinBox.value() < 101: self.tLengthSlider.setValue(self.tLengthSpinBox.value())
+        self.updatePreview()
+
+    def tailPositionSpinBoxUpdate(self):
+        self.tailAnglePositionSpinBox.setValue(self.tailAnglePositionSlider.value())
+        self.updatePreview()
+
+    def tailPositionSliderUpdate(self):
+        if self.tailAnglePositionSpinBox.value() < 360: self.tailAnglePositionSlider.setValue(self.tailAnglePositionSpinBox.value())
+        self.updatePreview()
+
+    def flipAngleH_f(self):
+        if self.tailAnglePositionSpinBox.value() <= 180:
+            self.tailAnglePositionSpinBox.setValue(180 - self.tailAnglePositionSpinBox.value())
+            self.tailAnglePositionSpinBox.setValue(180 - self.tailAnglePositionSpinBox.value())
+        else:
+            self.tailAnglePositionSpinBox.setValue(540 - self.tailAnglePositionSpinBox.value())
+            self.tailAnglePositionSpinBox.setValue(540 - self.tailAnglePositionSpinBox.value())
+        self.updatePreview()
+
+    def flipAngleV_f(self):
+        self.tailAnglePositionSpinBox.setValue(360 - self.tailAnglePositionSpinBox.value())
+        self.tailAnglePositionSlider.setValue(360 - self.tailAnglePositionSpinBox.value())
+        self.updatePreview()
+
+    def flipAngleHV_f(self):
+        self.tailAnglePositionSpinBox.setValue((self.tailAnglePositionSpinBox.value() + 180) % 360)
+        self.tailAnglePositionSlider.setValue((self.tailAnglePositionSpinBox.value() + 180) % 360)
         self.updatePreview()
 
     def enableAverageLineLength(self):
-        if self.autocenter.isChecked():
-            self.averageLineLength.setDisabled(True)
-        else:
-            self.averageLineLength.setDisabled(False)
+        self.averageLineLength.setDisabled(self.autocenter.isChecked())
         self.updatePreview()
 
-    def averageLineLengthSpinBoxUpdate(self):
+    def avgLineLenSpinBoxUpdate(self):
         self.averageLineLengthSpinBox.setValue(self.averageLineLengthSlider.value())
-
-    def averageLineLengthSliderUpdate(self):
-        if self.averageLineLengthSpinBox.value()<101:
-            self.averageLineLengthSlider.setValue(self.averageLineLengthSpinBox.value())
         self.updatePreview()
 
-    def getSpeechLines(self, text, lineLength):
+    def avgLineLenSliderUpdate(self):
+        if self.averageLineLengthSpinBox.value() < 101: self.averageLineLengthSlider.setValue(self.averageLineLengthSpinBox.value())
+        if not self.autocenter.isChecked(): self.updatePreview()
+
+    def getSpeechLines(self, text: str, lineLength: int) -> list[str]:
         size = 0
-        speach = ""
+        speech = ''
         lines = []
-        if (lineLength>0):
-            words = text.split(" ")
-            for word in words:
-                speach += word
+        if lineLength > 0:
+            for word in text.split(' '):
+                speech += word
                 size += len(word)
-                if size < lineLength:
-                    speach += " "
+                if size < lineLength: speech += ' '
                 else:
                     size = 0
-                    lines.append(speach)
-                    speach = ""
-            if (speach != "") and (speach != " "):
-                lines.append(speach.strip())
-        else:
-            lines = text.split("\n")
+                    lines.append(speech.rstrip())
+                    speech = ''
+            if speech not in ['', ' ']: lines.append(speech.rstrip())
+            return lines
+        return text.split('\n')
 
-        return lines
-
-    def getPreview(self):
+    def getPreview(self) -> str:
 
         # ----- calculate text geometry -----
-        lineLength = int((pow((len(self.bubbleText.toPlainText())), 1/2)) * 1.8)
-        if not(self.autocenter.isChecked()):
-            lineLength = self.averageLineLengthSpinBox.value()
+        # logger.log(LSBG_DEBUG, f'avg line length: {self.averageLineLengthSpinBox.value()}')
+        lineLength = int((pow((len(self.bubbleText.toPlainText())), 1/2)) * 1.8) if self.autocenter.isChecked() else self.averageLineLengthSpinBox.value()
         lines = self.getSpeechLines(self.bubbleText.toPlainText(), lineLength)
-
-        biggestLine = ""
-        for line in lines:
-            if (len(line) > len(biggestLine)):
-                biggestLine = line
 
         #Calculate text box size
         font = self.speechFont.currentFont()
-        font.setPixelSize(int(self.speechFontSize.value()*1.3))
+        font.setPointSize(self.speechFontSize.value())
         fontSize = self.speechFontSize.value()
-        textHeight = int(fontSize * (len(lines)) - (fontSize - QFontMetrics(font).capHeight()))
-        textWidth = QFontMetrics(font).width(biggestLine)
-        tailLength = self.tailSpinBox.value()
+        textWidth = 0
+        for line in lines: textWidth = QFontMetricsF(font).width(line) if QFontMetricsF(font).width(line) > textWidth else textWidth
+        textHeight = QFontMetricsF(font).lineSpacing()*len(lines)
+        # logger.log(LSBG_DEBUG, f'text height: {textHeight}')
+        tailLength = self.tLengthSpinBox.value()
+        bPadding = int(fontSize*1.5)
 
-        tailPadding = tailLength
-        bubblePadding = int(fontSize*1.5)
+        #  +--------------------------------------------------------------------------------> X
+        #  |          tailLength
+        #  |   <-------->
+        #  |                                 padding           (  theta = 0 starts  )
+        #  |                              <---->               ( at the pos x-axis, )
+        #  |            <---- bubbleWidth  ---->               ( theta increases CW )
+        #  |                 <-textWidth ->
+        #  |   +----------------------------------------+                                  /|\
+        #  |   |                                        |                                   |
+        #  |   |                                        |                                   |
+        #  |   |        +----------------------+        | /|\             /|\               | frameHeight
+        #  |   |        |                      |        |  | padding       |                |
+        #  |   |        |                      |        | \|/              |                |
+        #  |   |        |    +------------+    |        | /|\              | bubbleHeight   |
+        #  |   |        |    |            |    |        |  |               |                |
+        #  |   |        |    |    text    |    |        |  | textHeight    |                |
+        #  |   |        |    |            |    |        |  |               |                |
+        #  |   |        |    +------------+    |        | \|/              |                |
+        #  |   |        |                      |        |                  |                |
+        #  |   |        |                      |        |                  |                |
+        #  |   |        +----------------------+        | /|\             \|/               |
+        #  |   |          \    /                        |  | tailLength                     |
+        #  |   |           \  /                         |  |                                |
+        # \|/  +----------------------------------------+ \|/                              \|/
+        #  Y
 
-        textTag = "<text x=\"{}\" y=\"{}\" style=\"font-size:{};font-family:{};fill:{};text-anchor:middle\" >{}</text>"
-        text = ""
-        textStartX = fontSize + tailPadding + bubblePadding + (int(textWidth/2))
-        textStartY = fontSize + tailPadding + bubblePadding + QFontMetrics(font).capHeight()
+        bWidth  = bPadding + textWidth  + bPadding
+        bHeight = bPadding + textHeight + bPadding
+        frameWidth  = tailLength + bPadding + textWidth  + bPadding + tailLength
+        frameHeight = tailLength + bPadding + textHeight + bPadding + tailLength
+        # logger.log(logging.INFO, f'frame dimensions: {frameWidth},{frameHeight}')
 
+        text = ''
+        textStartX = tailLength + bPadding + (textWidth  / 2)
+        textStartY = tailLength + bPadding + (textHeight / 2)
+        textStartY2 = tailLength + bPadding + (textHeight / 2) - (0.5 * max(len(lines) - 1, 0) * QFontMetricsF(font).capHeight())
+        # logger.log(LSBG_DEBUG, f'line height: {QFontMetricsF(font).lineSpacing()}')
+        # logger.log(LSBG_DEBUG, f'font size: {fontSize}')
+        # logger.log(LSBG_DEBUG, f'text start Y: {textStartY}')
         for line in lines:
-            text += textTag.format(textStartX, textStartY, fontSize, font.family(), self.speechFontColor.name(), line)
-            textStartY += fontSize
+            # text += f'<text x=\"{textStartX}\" y=\"{textStartY}\" \
+            #     style=\"font-size:{fontSize};font-family:{font.family()}; \
+            #     fill:{self.speechFontColor.name()};text-anchor:middle\" >{line}</text>'
+            # textStartY += QFontMetricsF(font).lineSpacing()
+            text += f'<text x=\"{textStartX}\" y=\"{textStartY2}\" \
+                style=\"font-size:{fontSize};font-family:{font.family()}; \
+                fill:#FF0000;text-anchor:middle\" >{line}</text>'
+            textStartY2 += QFontMetricsF(font).lineSpacing()
 
+        theta = self.tailAnglePositionSpinBox.value() * (2*pi) / 360
 
-        # ----- calculate bubble geometry -----
+        if self.roundBubble.isChecked():
+            discriminent2 = ((4*(bWidth/2)*(bWidth/2) + 4*(bHeight/2)*(bHeight/2)) * (sin(theta)*sin(theta))) + (4*(bHeight/2)*(bHeight/2))
+            # logger.log(LSBG_DEBUG, f'asin sqrt discriminent: {discriminent2}')
+            discriminent1 = 10 / sqrt( ((4*(bWidth/2)*(bWidth/2) + 4*(bHeight/2)*(bHeight/2)) * (sin(theta)*sin(theta))) + (4*(bHeight/2)*(bHeight/2)) )
+            # logger.log(LSBG_DEBUG, f'asin discriminent: {discriminent1}')
+            # thetaD = asin(tailWidth / sqrt( (4*(bWidth/2)^2 + 4*(bHeight/2)^2)(sin(theta)*sin(theta)) + 4*(bHeight/2)^2))
+            thetaD = asin(10 / sqrt( ((4*(bWidth/2)*(bWidth/2) + 4*(bHeight/2)*(bHeight/2)) * (sin(theta)*sin(theta))) + (4*(bHeight/2)*(bHeight/2)) )) # TEMP VALUE
+            # logger.log(LSBG_DEBUG, f'thetaD: {thetaD}')
 
-        #              bCoordsX0      bCoordsXHalf     bCoordsX1 
-        #                  |               |               |
-        #     bCoordsY0 -> +---------------+---------------+
-        #                  |                               |
-        #                  |                               |
-        #  bCoordsYHalf -> +                               +
-        #                  |                               |
-        #                  |                               |
-        #     bCoordsY1 -> +---------------+---------------+
+            tailPointX0 = ((bWidth  / 2)*cos(theta - thetaD)) + (frameWidth  / 2)
+            tailPointY0 = ((bHeight / 2)*sin(theta - thetaD)) + (frameHeight / 2)
+            tailPointX1 = ((bWidth  / 2)*cos(theta + thetaD)) + (frameWidth  / 2)
+            tailPointY1 = ((bHeight / 2)*sin(theta + thetaD)) + (frameHeight / 2)
 
-        bCoordsX0    = fontSize + tailPadding
-        bCoordsY0    = fontSize + tailPadding
-        bCoordsXHalf = fontSize + tailPadding + bubblePadding + (int(textWidth/2))
-        bCoordsYHalf = fontSize + tailPadding + bubblePadding + (int(textHeight/2))
-        bCoordsX1    = fontSize + tailPadding + bubblePadding + textWidth + bubblePadding
-        bCoordsY1    = fontSize + tailPadding + bubblePadding + textHeight + bubblePadding
-        bubbleCoordinates = [
-            BubbleCoordinates(bCoordsXHalf, bCoordsY0     ),
-            BubbleCoordinates(bCoordsX1,    bCoordsY0     ),
-            BubbleCoordinates(bCoordsX1,    bCoordsYHalf  ),
-            BubbleCoordinates(bCoordsX1,    bCoordsY1     ),
-            BubbleCoordinates(bCoordsXHalf, bCoordsY1     ),
-            BubbleCoordinates(bCoordsX0,    bCoordsY1     ),
-            BubbleCoordinates(bCoordsX0,    bCoordsYHalf  ),
-            BubbleCoordinates(bCoordsX0,    bCoordsY0     )
-        ]
+            dX = (bWidth  / 2) * sin(theta) * -1
+            dY = (bHeight / 2) * cos(theta)
+            tailEndX = (bWidth  / 2) * cos(theta) + (frameWidth  / 2) + (max(tailLength,1) * (dY / sqrt(dX*dX + dY*dY)))
+            tailEndY = (bHeight / 2) * sin(theta) + (frameHeight / 2) - (max(tailLength,1) * (dX / sqrt(dX*dX + dY*dY)))
 
-        bCoordsString = 'M'
-        bubbleCoordinatesStringEnd = f'{bCoordsXHalf},{bCoordsY0}Z'
-        for i in range(8):
-            if (self.roundBubble.isChecked()):
+            bubbleString = f'M {tailPointX0} {tailPointY0} A {bWidth/2} {bHeight/2} \
+                            0 1 0 {tailPointX1} {tailPointY1} L {tailEndX} {tailEndY} Z'
 
-                if (self.tailSpinBox.value() > 0):
-                    #for coordinates in center (even)
-                    textWidth01 = int(pow(textWidth,1/2.8))
-                    textHeight01 = int(pow(textHeight,1/2))
-                    #for coordinates in the corner (odd)
-                    x04 = int((bCoordsX1 - bCoordsXHalf)*0.4)
-                    x06 = int((bCoordsX1 - bCoordsXHalf)*0.6)
-                    y04 = int((bCoordsYHalf - bCoordsY0)*0.4)
-                    y06 = int((bCoordsYHalf - bCoordsY0)*0.6)
-                    if i == 0 and self.tailPosition[i].isChecked():
-                        bCoordsString += f'{bCoordsXHalf - textWidth01},{bCoordsY0} L{bCoordsXHalf},{bCoordsY0 - tailLength} {bCoordsXHalf + textWidth01},{bCoordsY0} Z'
+        if self.squareBubble.isChecked(): pass
+        if self.squircleBubble.isChecked(): pass
 
-                        bubbleCoordinatesStringEnd = ''.join(
-                            str(bCoordsXHalf - textWidth01), ",",
-                            str(bCoordsY0), "Z")
-
-                    elif i == 2 and self.tailPosition[i].isChecked():
-                        bCoordsString += str(bCoordsX1) + "," + str(bCoordsYHalf - textHeight01) + " L" + str(bCoordsX1 + tailLength) + "," + str(bCoordsYHalf) + " " + str(bCoordsX1) + "," + str(bCoordsYHalf + textHeight01) + " "
-                    elif i == 4 and self.tailPosition[i].isChecked():
-                        bCoordsString += str(bCoordsXHalf + textWidth01) + "," + str(bCoordsY1) + " L" + str(bCoordsXHalf) + "," + str(bCoordsY1 + tailLength) + " " + str(bCoordsXHalf - textWidth01) + "," + str(bCoordsY1) + " "
-                    elif i == 6 and self.tailPosition[i].isChecked():
-                        bCoordsString += str(bCoordsX0) + "," + str(bCoordsYHalf + textHeight01) + " L" + str(bCoordsX0 - tailLength) + "," + str(bCoordsYHalf) + " " + str(bCoordsX0) + "," + str(bCoordsYHalf - textHeight01) + " "
-
-                    elif i == 1 and self.tailPosition[i].isChecked():
-                        bCoordsString += "Q" + str(bCoordsX1 - x06) + "," + str(bCoordsY0) + " " + str(int((bCoordsX1 + bCoordsX1 - x06)/2)) + "," + str(int((bCoordsY0 + y04 + bCoordsY0)/2)) + " L" + str(bCoordsX1 + tailLength) + "," + str(bCoordsY0 - tailLength) + " " + str(int((bCoordsX1 + bCoordsX1 - x04)/2)) + "," + str(int((bCoordsY0 + y06 + bCoordsY0)/2)) + " Q"  + str(bCoordsX1) + "," + str(bCoordsY0 + y06) + " "
-                    elif i == 3 and self.tailPosition[i].isChecked():
-                        bCoordsString += "Q" + str(bCoordsX1) + "," + str(bCoordsY1 - y06) + " " + str(int((bCoordsX1 + bCoordsX1 - x04)/2)) + "," + str(int((bCoordsY1 - y06 + bCoordsY1)/2)) + " L" + str(bCoordsX1 + tailLength) + "," + str(bCoordsY1 + tailLength) + " " + str(int((bCoordsX1 + bCoordsX1 - x06)/2)) + "," + str(int((bCoordsY1 - y04 + bCoordsY1)/2)) + " Q" + str(bCoordsX1 - x06) + "," + str(bCoordsY1) + " "
-                    elif i == 5 and self.tailPosition[i].isChecked():
-                        bCoordsString += "Q" + str(bCoordsX0 + x06) + "," + str(bCoordsY1) + " " + str(int((bCoordsX0 + bCoordsX0 + x06)/2)) + "," + str(int((bCoordsY1 - y04 + bCoordsY1)/2)) + " L" + str(bCoordsX0 - tailLength) + "," + str(bCoordsY1 + tailLength) + " " + str(int((bCoordsX0 + bCoordsX0 + x04)/2)) + "," + str(int((bCoordsY1 - y06 + bCoordsY1)/2)) + " Q"  + str(bCoordsX0) + "," + str(bCoordsY1 - y06) + " "
-                    elif i == 7 and self.tailPosition[i].isChecked():
-                        bCoordsString += "Q" + str(bCoordsX0) + "," + str(bCoordsY0 + y06) + " " + str(int((bCoordsX0 + bCoordsX0 + x04)/2)) + "," + str(int((bCoordsY0 + y06 + bCoordsY0)/2)) + " L" + str(bCoordsX0 - tailLength) + "," + str(bCoordsY0 - tailLength) + " " + str(int((bCoordsX0 + bCoordsX0 + x06)/2)) + "," + str(int((bCoordsY0 + y04 + bCoordsY0)/2)) + " Q" + str(bCoordsX0 + x06) + "," + str(bCoordsY0) + " "
-                    else:
-                        if (i % 2 == 0):
-                            bCoordsString += str(bubbleCoordinates[i].x) + "," + str(bubbleCoordinates[i].y) + " "
-                        else:
-                            bCoordsString += "Q" +  str(bubbleCoordinates[i].x) + "," + str(bubbleCoordinates[i].y) + " "
-                else:
-                        if (i % 2 == 0):
-                            bCoordsString += str(bubbleCoordinates[i].x) + "," + str(bubbleCoordinates[i].y) + " "
-                        else:
-                            bCoordsString += "Q" +  str(bubbleCoordinates[i].x) + "," + str(bubbleCoordinates[i].y) + " "
-            elif (self.squareBubble.isChecked()):
-                bCoordsString += str(bubbleCoordinates[i].x) + "," + str(bubbleCoordinates[i].y) + " "
-
-        bCoordsString += bubbleCoordinatesStringEnd
-        pathStyle = "style=\"fill:{};stroke:{};stroke-width:{};stroke-linejoin:round\"".format(self.bubbleColor.name(),self.outlineColor.name(),self.bOutlineThicknessSpinBox.value())
-        bubble = "<path " +  pathStyle  + " d=\"" +  bCoordsString  + "\"/>"
-
-        frameWidth = fontSize + tailPadding + bubblePadding + textWidth + bubblePadding + tailPadding + fontSize
-        frameHeight = fontSize + tailPadding + bubblePadding + textHeight + bubblePadding + tailPadding + fontSize
-
-        result = "<svg width=\"{}\" height=\"{}\" >{}{}</svg>".format(frameWidth, frameHeight, bubble, text)
-
-        return result
+        bubble = f'<path style=\"fill:{self.bubbleColor.name()};stroke:{self.outlineColor.name()};\
+            stroke-width:{self.bOutlineThicknessSpinBox.value()};stroke-linejoin:round\" d=\"{bubbleString}\"/>'
+        posFixRect = f'<rect x="0" y="0" width="{frameWidth}" height="{frameHeight}" fill="#000000" fill-opacity="0%" stroke="#000000" stroke-width="0" stroke-opacity="0%" />'
+        self.preview.renderer().setViewBox(QRect(0,0,int(frameWidth), int((frameHeight))))
+        # return f'<svg keepaspectratio="xMinYMin meet" width=\"{frameWidth}\" height=\"{frameHeight}\" >{bubble}{text}</svg>'
+        return f'<svg keepaspectratio="xMidYMid meet" >{posFixRect}{bubble}{text}</svg>'
 
     def updatePreview(self):
         result = self.getPreview()
@@ -472,10 +506,16 @@ class LSBGDocker(DockWidget):
         root.addChildNode(l3, None)
         l3.addShapesFromSvg(result)
 
+    def _isSameSize(self, oldSize: QSize, newSize: QSize) -> bool:
+        return (oldSize.width() == newSize.width()) and (oldSize.height() == newSize.height())
 
+    def resizeEvent(self, ev: QResizeEvent):
+        if not self._isSameSize(ev.oldSize(), ev.size()):
+            self.getPreview()
+            minW = 9999
+            for c in self.widget().children(): minW = c.width() if c.width() < minW else minW
+            self.preview.setFixedSize(int(ev.size().width()-(2*minW)), int((ev.size().width()-(2*minW))*0.667))
 
-
-    def canvasChanged(self, canvas):
-        pass
+    def canvasChanged(self, canvas): pass
 
 Krita.instance().addDockWidgetFactory(DockWidgetFactory("Laserkitty's Speech Bubble Generator", DockWidgetFactoryBase.DockRight, LSBGDocker))
