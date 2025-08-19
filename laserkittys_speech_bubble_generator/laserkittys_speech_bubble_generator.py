@@ -18,7 +18,7 @@ logging.basicConfig(
     level=LSBG_DEBUG
 )
 logger.info(f'Krita version: {Application.version()}')
-LSBG_PLUGIN_VERSION = '0.2.0' ; logger.info(f'LSBG version: {LSBG_PLUGIN_VERSION}')
+LSBG_PLUGIN_VERSION = '0.2.1' ; logger.info(f'LSBG version: {LSBG_PLUGIN_VERSION}')
 
 MAINLAYOUT_CONTENTS_MARGINS = 10
 MAINLAYOUT_MIN_WIDTH = 352
@@ -45,11 +45,12 @@ class LSBGDocker(DockWidget):
 
         self.previewBox = QGroupBox()
         self.previewBox.setTitle("Preview")
-        self.previewBoxLayout = QVBoxLayout()
+        self.previewBoxLayout = QHBoxLayout()
+        self.previewBoxLayout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.previewBox.setLayout(self.previewBoxLayout)
         self.preview = QSvgWidget(self)
-        self.preview.setFixedSize(300,200)
         self.preview.renderer().setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
+        self.preview.setFixedSize(300,200)
         self.previewBoxLayout.addWidget(self.preview)
         self.mainLayout.addWidget(self.previewBox)
 
@@ -65,7 +66,6 @@ class LSBGDocker(DockWidget):
 
         self.squareBubble = QRadioButton(self)
         self.squareBubble.setText("Square")
-        # self.squareBubble.setDisabled(True)
         self.bubbleTypesLayout.addWidget(self.squareBubble)
 
         self.squircleBubble = QRadioButton(self)
@@ -154,34 +154,8 @@ class LSBGDocker(DockWidget):
 
         self.speechGroupLayout.addLayout(self.fontRow)
 
-
-
-        # MARK: misc
-        self.bubbleText = QTextEdit("Laserkitty's speech bubble generator!")
+        self.bubbleText = QTextEdit("Laserkitty's speech\nbubble generator!")
         self.speechGroupLayout.addWidget(self.bubbleText)
-
-        self.autocenter = QCheckBox(self)
-        self.autocenter.setText("Center automatically")
-        self.autocenter.setChecked(True)
-        self.speechGroupLayout.addWidget(self.autocenter)
-
-
-        self.averageLineLength = QGroupBox()
-        self.avgLineLenSliderAndSpinBox = QHBoxLayout()
-
-        self.averageLineLengthSlider = QSlider(self)
-        self.averageLineLengthSlider.setMinimum(0)
-        self.averageLineLengthSlider.setMaximum(100)
-        self.averageLineLengthSlider.setOrientation(Qt.Orientation.Horizontal)
-        self.avgLineLenSliderAndSpinBox.addWidget(self.averageLineLengthSlider)
-
-        self.averageLineLengthSpinBox = QSpinBox(self)
-        self.averageLineLengthSpinBox.setMinimum(0)
-        self.avgLineLenSliderAndSpinBox.addWidget(self.averageLineLengthSpinBox)
-        
-        self.averageLineLength.setLayout(self.avgLineLenSliderAndSpinBox)
-        self.averageLineLength.setDisabled(True)
-        self.speechGroupLayout.addWidget(self.averageLineLength)
 
         self.speechGroup.setLayout(self.speechGroupLayout)
         self.mainLayout.addWidget(self.speechGroup)
@@ -288,9 +262,6 @@ class LSBGDocker(DockWidget):
         self.speechFontSize.valueChanged.connect(self.tailSliderUpdateMaximum)
         self.currentFontColorButton.clicked.connect(self.changeFontColor)
         self.speechFont.currentFontChanged.connect(self.updatePreview)
-        self.autocenter.stateChanged.connect(self.enableAverageLineLength)
-        self.averageLineLengthSlider.valueChanged.connect(self.avgLineLenSpinBoxUpdate)
-        self.averageLineLengthSpinBox.valueChanged.connect(self.avgLineLenSliderUpdate)
 
         # bubble tail param signals
         self.tLengthSlider.valueChanged.connect(self.tLengthSpinBoxUpdate)
@@ -395,48 +366,17 @@ class LSBGDocker(DockWidget):
         self.tAnglePosSpinBox.setValue((self.tAnglePosSpinBox.value() + 180) % 360)
         self.updatePreview()
 
-    def enableAverageLineLength(self):
-        self.averageLineLength.setDisabled(self.autocenter.isChecked())
-        self.updatePreview()
-
-    def avgLineLenSpinBoxUpdate(self):
-        self.averageLineLengthSpinBox.setValue(self.averageLineLengthSlider.value())
-        self.updatePreview()
-
-    def avgLineLenSliderUpdate(self):
-        if self.averageLineLengthSpinBox.value() < 101: self.averageLineLengthSlider.setValue(self.averageLineLengthSpinBox.value())
-        if not self.autocenter.isChecked(): self.updatePreview()
-
-    def getSpeechLines(self, text: str, lineLength: int) -> list[str]:
-        size = 0
-        speech = ''
-        lines = []
-        if lineLength > 0:
-            for word in text.split(' '):
-                speech += word
-                size += len(word)
-                if size < lineLength: speech += ' '
-                else:
-                    size = 0
-                    lines.append(speech.rstrip())
-                    speech = ''
-            if speech not in ['', ' ']: lines.append(speech.rstrip())
-            return lines
-        return text.split('\n')
-
     def getPreview(self) -> str:
-
-        # ----- calculate text geometry -----
-        lineLength = int((pow((len(self.bubbleText.toPlainText())), 1/2)) * 1.8) if self.autocenter.isChecked() else self.averageLineLengthSpinBox.value()
-        lines = self.getSpeechLines(self.bubbleText.toPlainText(), lineLength)
 
         #Calculate text box size
         font = self.speechFont.currentFont()
         font.setPointSize(self.speechFontSize.value())
         fontSize = self.speechFontSize.value()
         textWidth = 0
+        lines = self.bubbleText.toPlainText().split('\n')
         for line in lines: textWidth = QFontMetricsF(font).width(line) if QFontMetricsF(font).width(line) > textWidth else textWidth
-        textHeight = QFontMetrics(font).capHeight() + QFontMetricsF(font).lineSpacing()*(len(lines)-1)
+        textHeight = QFontMetrics(font).capHeight() + QFontMetricsF(font).lineSpacing()*max(len(lines)-1,0)
+        logger.log(LSBG_DEBUG, f'text height: {textHeight}')
         tailLength = self.tLengthSpinBox.value()
         tailWidth = self.tWidthSpinBox.value()
         bPadding = int(fontSize*1.5)
@@ -471,6 +411,7 @@ class LSBGDocker(DockWidget):
         bHeight = bPadding + textHeight + bPadding
         frameWidth  = tailLength + bPadding + textWidth  + bPadding + tailLength
         frameHeight = tailLength + bPadding + textHeight + bPadding + tailLength
+        self.bAspectRatio = frameHeight/frameWidth
 
         text = ''
         textStartX = tailLength + bPadding + (textWidth  / 2)
@@ -512,16 +453,16 @@ class LSBGDocker(DockWidget):
                     A {bWidth/2} {bHeight/2} 0 1 0 {ellipsePX} {ellipsePY} Z'
 
         if self.squareBubble.isChecked():
-            horizontalAngleBound = 180*(bWidth/2)/(2*(bWidth/2) + 2*(bHeight/2))
+            horizontalAngleBound = 180*(bWidth /2)/(2*(bWidth/2) + 2*(bHeight/2))
             verticalAngleBound   = 180*(bHeight/2)/(2*(bWidth/2) + 2*(bHeight/2))
             self.tWidthSlider.setMaximum(int(min(horizontalAngleBound, verticalAngleBound)))
             theta = self.tAnglePosSpinBox.value()
-            A0 = -0.5*(bHeight/2)/(2*(bWidth/2) + 2*(bHeight/2))
-            A1 = 0.5*(bHeight/2)/(2*(bWidth/2) + 2*(bHeight/2)) # upper right corner
-            A2 = ((bWidth/2) + 0.5*(bHeight/2))/(2*(bWidth/2) + 2*(bHeight/2)) # upper left corner
-            A3 = ((bWidth/2) + 1.5*(bHeight/2))/(2*(bWidth/2) + 2*(bHeight/2)) # lower left corner
+            A0 =                 -0.5*(bHeight/2)/(2*(bWidth/2) + 2*(bHeight/2))
+            A1 =                  0.5*(bHeight/2)/(2*(bWidth/2) + 2*(bHeight/2)) # upper right corner
+            A2 =   ((bWidth/2) + 0.5*(bHeight/2))/(2*(bWidth/2) + 2*(bHeight/2)) # upper left corner
+            A3 =   ((bWidth/2) + 1.5*(bHeight/2))/(2*(bWidth/2) + 2*(bHeight/2)) # lower left corner
             A4 = (2*(bWidth/2) + 1.5*(bHeight/2))/(2*(bWidth/2) + 2*(bHeight/2)) # lower right corner
-            A5 = 1 + (1.5*(bHeight/2)/(2*(bWidth/2) + 2*(bHeight/2)))
+            A5 =             1 + (1.5*(bHeight/2)/(2*(bWidth/2) + 2*(bHeight/2)))
 
             def squareBubbleX(a):
                 if A0 <= a < A1: return (bWidth/2)
@@ -539,47 +480,75 @@ class LSBGDocker(DockWidget):
                 if A4 <= a < A5: return (-1 + (a-A4)/(1-A4))*(bHeight/2)
                 raise ValueError(f'value not in range: {a}')
 
-            tailPointX0 = squareBubbleX((theta-tailWidth)/360)+(frameWidth/2)
+            tailPointX0 = squareBubbleX((theta-tailWidth)/360)+(frameWidth /2)
             tailPointY0 = squareBubbleY((theta-tailWidth)/360)+(frameHeight/2)
-            tailPointX1 = squareBubbleX((theta+tailWidth)/360)+(frameWidth/2)
+            tailPointX1 = squareBubbleX((theta+tailWidth)/360)+(frameWidth /2)
             tailPointY1 = squareBubbleY((theta+tailWidth)/360)+(frameHeight/2)
-            # if (theta/360) < a1-(tailWidth/360): # right wall
-            if theta < 360*A1: # right wall
+            if (theta/360) < A1-(tailWidth/360): # right wall
                 #    +----------------+
                 #    |                | >
                 #    |                |
                 #    |                |
                 #    +----------------+
-                tailEndX = squareBubbleX(theta/360)+tailLength+(frameWidth/2)
+                tailEndX = squareBubbleX(theta/360)+(frameWidth /2)+tailLength
                 tailEndY = squareBubbleY(theta/360)+(frameHeight/2)
                 bubblePath = f'M {tailPointX0} {tailPointY0} L {tailEndX} {tailEndY} \
                     {tailPointX1} {tailPointY1} {(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
                     {-(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
                     {-(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
                     {(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} Z'
-            # elif (theta/360) < a1+(tailWidth/360): pass # upper right corner
-            elif theta < 360*A2: # upper wall
-                #               /\
-                #    +----------------+
-                #    |                |
-                #    |                |
-                #    |                |
-                #    +----------------+
-                tailEndX = squareBubbleX(theta/360)+(frameWidth/2)
-                tailEndY = squareBubbleY(theta/360)+tailLength+(frameHeight/2)
+            elif (theta/360) < A1+(tailWidth/360): # upper right corner
+                #                          *
+                #                        *
+                #     +----------------+
+                #     |                |
+                #     |                |
+                #     |                |
+                #     +----------------+
+                tailEndX = (bWidth /2)+(frameWidth /2)+(0.5*sqrt(2)*tailLength)
+                tailEndY = (bHeight/2)+(frameHeight/2)+(0.5*sqrt(2)*tailLength)
+                bubblePath = f'M {tailPointX0} {tailPointY0} L \
+                    {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
+                    {-(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
+                    {-(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
+                    {(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} Z'
+            elif (theta/360) < A2-(tailWidth/360): # upper wall
+                #                /\
+                #     +----------------+
+                #     |                |
+                #     |                |
+                #     |                |
+                #     +----------------+
+                tailEndX = squareBubbleX(theta/360)+(frameWidth /2)
+                tailEndY = squareBubbleY(theta/360)+(frameHeight/2)+tailLength
                 bubblePath = f'M {(bWidth/2)+(frameWidth/2)} {(frameHeight/2)} L \
                     {(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
                     {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
                     {-(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
                     {-(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
                     {(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} Z'
-            elif theta < 360*A3: # left wall
-                #    +----------------+
-                #    |                |
-                #    |                |
-                #  < |                |
-                #    +----------------+
-                tailEndX = squareBubbleX(theta/360)-tailLength+(frameWidth/2)
+            elif (theta/360) < A2+(tailWidth/360): # upper left corner
+                # *
+                #   *
+                #     +----------------+
+                #     |                |
+                #     |                |
+                #     |                |
+                #     +----------------+
+                tailEndX = -(bWidth/2)+(frameWidth /2)-(0.5*sqrt(2)*tailLength)
+                tailEndY = (bHeight/2)+(frameHeight/2)+(0.5*sqrt(2)*tailLength)
+                bubblePath = f'M {(bWidth/2)+(frameWidth/2)} {(frameHeight/2)} L \
+                    {(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
+                    {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
+                    {-(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
+                    {(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} Z'
+            elif (theta/360) < A3-(tailWidth/360): # left wall
+                #     +----------------+
+                #     |                |
+                #     |                |
+                #   < |                |
+                #     +----------------+
+                tailEndX = squareBubbleX(theta/360)+(frameWidth /2)-tailLength
                 tailEndY = squareBubbleY(theta/360)+(frameHeight/2)
                 bubblePath = f'M {(bWidth/2)+(frameWidth/2)} {(frameHeight/2)} L \
                     {(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
@@ -587,31 +556,59 @@ class LSBGDocker(DockWidget):
                     {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
                     {-(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
                     {(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} Z'
-            elif theta < 360*A4: # lower wall
-                #    +----------------+
-                #    |                |
-                #    |                |
-                #    |                |
-                #    +----------------+
-                #               \/
-                tailEndX = squareBubbleX(theta/360)+(frameWidth/2)
-                tailEndY = squareBubbleY(theta/360)-tailLength+(frameHeight/2)
+            elif (theta/360) < A3+(tailWidth/360): # lower left corner
+                #     +----------------+
+                #     |                |
+                #     |                |
+                #     |                |
+                #     +----------------+
+                #   *
+                # *
+                tailEndX = -(bWidth /2)+(frameWidth /2)-(0.5*sqrt(2)*tailLength)
+                tailEndY = -(bHeight/2)+(frameHeight/2)-(0.5*sqrt(2)*tailLength)
+                bubblePath = f'M {(bWidth/2)+(frameWidth/2)} {(frameHeight/2)} L \
+                    {(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
+                    {-(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
+                    {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
+                    {(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} Z'
+            elif (theta/360) < A4-(tailWidth/360): # lower wall
+                #     +----------------+
+                #     |                |
+                #     |                |
+                #     |                |
+                #     +----------------+
+                #                \/
+                tailEndX = squareBubbleX(theta/360)+(frameWidth /2)
+                tailEndY = squareBubbleY(theta/360)+(frameHeight/2)-tailLength
                 bubblePath = f'M {(bWidth/2)+(frameWidth/2)} {(frameHeight/2)} L \
                     {(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
                     {-(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
                     {-(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
                     {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
                     {(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} Z'
-            elif theta < 360*A5: # right wall
-                #    +----------------+
-                #    |                |
-                #    |                |
-                #    |                | >
-                #    +----------------+
-                tailEndX = squareBubbleX(theta/360)+tailLength+(frameWidth/2)
+            elif (theta/360) < A4+(tailWidth/360): # lower right corner
+                #     +----------------+
+                #     |                |
+                #     |                |
+                #     |                |
+                #     +----------------+
+                #                        *
+                #                          *
+                tailEndX =  (bWidth /2)+(frameWidth /2)+(0.5*sqrt(2)*tailLength)
+                tailEndY = -(bHeight/2)+(frameHeight/2)-(0.5*sqrt(2)*tailLength)
+                bubblePath = f'M {(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} L \
+                    {-(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
+                    {-(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
+                    {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} Z'
+            elif (theta/360) < A5: # right wall
+                #     +----------------+
+                #     |                |
+                #     |                |
+                #     |                | >
+                #     +----------------+
+                tailEndX = squareBubbleX(theta/360)+(frameWidth /2)+tailLength
                 tailEndY = squareBubbleY(theta/360)+(frameHeight/2)
-                bubblePath = f'M {(bWidth/2)+(frameWidth/2)} {(frameHeight/2)} L \
-                    {(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
+                bubblePath = f'M {(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} L \
                     {-(bWidth/2)+(frameWidth/2)} {(bHeight/2)+(frameHeight/2)} \
                     {-(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
                     {(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
@@ -625,8 +622,8 @@ class LSBGDocker(DockWidget):
             stroke-width:{self.bOutlineThicknessSpinBox.value()};stroke-linejoin:round\" d=\"{bubblePath}"/>'
         posFixRect = f'<rect x="0" y="0" width="{frameWidth}" height="{frameHeight}" fill="#000000" \
             fill-opacity="0%" stroke="#000000" stroke-width="0" stroke-opacity="0%" />'
-        self.preview.renderer().setViewBox(QRect(0,0,int(frameWidth), int((frameHeight))))
-        return f'<svg keepaspectratio="xMidYMid meet" ><g>{posFixRect}{bubble}{text}</g></svg>'
+        self.preview.setFixedSize(self.preview.width(), int(self.preview.width()*self.bAspectRatio))
+        return f'<svg keepaspectratio="xMidYMid meet" width="{frameWidth}" height="{frameHeight}" ><g>{posFixRect}{bubble}{text}</g></svg>'
 
     def updatePreview(self):
         result = self.getPreview()
@@ -635,24 +632,25 @@ class LSBGDocker(DockWidget):
 
     def addOnPageShape(self):
         result = self.getPreview()
-        d = Krita.instance().activeDocument()
-        root = d.rootNode()
-        l3 = d.createVectorLayer(self.bubbleText.toPlainText()[:16])
-        root.addChildNode(l3, None)
-        l3.addShapesFromSvg(result)
-
-    def _isSameSize(self, oldSize: QSize, newSize: QSize) -> bool:
-        return (oldSize.width() == newSize.width()) and (oldSize.height() == newSize.height())
+        activeDoc = Krita.instance().activeDocument()
+        activeLayer = activeDoc.activeNode()
+        if activeLayer.type() == 'vectorlayer':
+            activeLayer.addShapesFromSvg(result)
+        else:
+            root = activeDoc.rootNode()
+            vecLayer = activeDoc.createVectorLayer(self.bubbleText.toPlainText()[:16])
+            root.addChildNode(vecLayer, None)
+            vecLayer.addShapesFromSvg(result)
 
     def resizeEvent(self, ev: QResizeEvent):
-        if not self._isSameSize(ev.oldSize(), ev.size()):
-            self.getPreview()
+        sameSize = (ev.oldSize().width() == ev.size().width()) and (ev.oldSize().height() == ev.size().height())
+        if not sameSize:
             # logger.log(LSBG_DEBUG, f'{self.scrollMainLayout.widget().width()}')
             scrollBarWidth = 9999
             for c in self.widget().children(): scrollBarWidth = c.width() if c.width() < scrollBarWidth else scrollBarWidth
             if ev.size().width() >= MAINLAYOUT_MIN_WIDTH+(2*MAINLAYOUT_CONTENTS_MARGINS):
                 newWidth = ev.size().width()-(4*scrollBarWidth)-(2*MAINLAYOUT_CONTENTS_MARGINS)
-                self.preview.setFixedSize(int(newWidth), int(newWidth*0.667))
+                self.preview.setFixedSize(int(newWidth), int(newWidth*self.bAspectRatio))
 
     def canvasChanged(self, canvas): pass
 
