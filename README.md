@@ -2,11 +2,11 @@
 
 ###### A fork of [Rogudator's Speech Bubble Generator](https://github.com/rogudator/rogudators_speech_bubble_generator) plugin for krita
 
-A plugin for Krita to make speech bubbles faster. Choose from different bubble types: squircle, thought, shouting
+A plugin for Krita to make speech bubbles faster. Choose from different bubble types: round, ~~square, squircle, thought, shouting~~
 
 ## Changes:
 - bubble tail can now be at any angle around the bubble
-- new bubble types: squircle, thought, shouting
+- new bubble types: ~~squircle, thought, shouting~~
 
 ### To Do:
 |Task|Status|
