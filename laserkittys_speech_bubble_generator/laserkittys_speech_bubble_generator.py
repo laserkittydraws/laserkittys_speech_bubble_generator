@@ -1,5 +1,5 @@
-from PyQt5.QtGui import QColor, QFontMetrics, QFontMetricsF, QIcon, QPixmap, QResizeEvent
-from PyQt5.QtWidgets import QApplication, QCheckBox, QColorDialog, QFontComboBox, QGroupBox, QLabel, QMainWindow, QPushButton, QRadioButton, QSlider, QSpinBox, QTextEdit, QVBoxLayout, QHBoxLayout, QWidget, QScrollArea, QScrollBar, QSizePolicy
+from PyQt5.QtGui import QColor, QFontMetrics, QFontMetricsF, QFont, QFontInfo, QIcon, QPixmap, QResizeEvent
+from PyQt5.QtWidgets import QApplication, QColorDialog, QFontComboBox, QGroupBox, QLabel, QMainWindow, QPushButton, QRadioButton, QCheckBox, QComboBox, QSlider, QSpinBox, QTextEdit, QVBoxLayout, QHBoxLayout, QWidget, QScrollArea, QScrollBar, QSizePolicy
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtCore import Qt, QRect, QSize
 
@@ -11,11 +11,13 @@ from datetime import datetime
 
 import logging
 logger = logging.getLogger('lsbg')
-LSBG_DEBUG = 15 ; logging.addLevelName(LSBG_DEBUG, 'LSBG_DEBUG')
+LSBG_DEBUG_VERBOSE = 15 ; logging.addLevelName(LSBG_DEBUG_VERBOSE, 'LSBG_DEBUG')
+LSBG_DEBUG_MINIMAL = 16 ; logging.addLevelName(LSBG_DEBUG_MINIMAL, 'LSBG_DEBUG')
+LSBG_LOGGING_LEVEL = 'VERBOSE'
 logging.basicConfig(
     filename=f'{Krita.getAppDataLocation()}/pykrita/laserkittys_speech_bubble_generator/logs/lsbg_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log',
     format='%(asctime)s: %(name)s - [%(levelname)s] - %(message)s',
-    level=LSBG_DEBUG
+    level=LSBG_DEBUG_VERBOSE if LSBG_LOGGING_LEVEL == 'VERBOSE' else LSBG_DEBUG_MINIMAL
 )
 logger.info(f'Krita version: {Application.version()}')
 LSBG_PLUGIN_VERSION = '0.2.1' ; logger.info(f'LSBG version: {LSBG_PLUGIN_VERSION}')
@@ -84,6 +86,9 @@ class LSBGDocker(DockWidget):
         # self.bubbleTypesLayout.addWidget(self.shoutBubble)
 
         # TODO: change bubble type selection to a dropdown
+        # self.bubbleType = QComboBox()
+        # self.bubbleType.addItems([...bubble types...])
+        # self.bubbleTypesLayout.addWidget(self.bubbleType)
 
         self.bubbleColorButton = QPushButton(self)
         self.bubbleColor = QColor("white")
@@ -210,12 +215,12 @@ class LSBGDocker(DockWidget):
         self.tailPositions.setTitle("Tail position")
         self.tailPositionsLayout = QHBoxLayout()
 
-        self.tailAnglePositionSlider = QSlider(self)
-        self.tailAnglePositionSlider.setMinimum(0)
-        self.tailAnglePositionSlider.setMaximum(360)
-        self.tailAnglePositionSlider.setValue(45)
-        self.tailAnglePositionSlider.setOrientation(Qt.Orientation.Horizontal)
-        self.tailPositionsLayout.addWidget(self.tailAnglePositionSlider)
+        self.tAnglePosSlider = QSlider(self)
+        self.tAnglePosSlider.setMinimum(0)
+        self.tAnglePosSlider.setMaximum(360)
+        self.tAnglePosSlider.setValue(45)
+        self.tAnglePosSlider.setOrientation(Qt.Orientation.Horizontal)
+        self.tailPositionsLayout.addWidget(self.tAnglePosSlider)
         
         self.tAnglePosSpinBox = QSpinBox(self)
         self.tAnglePosSpinBox.setMinimum(0)
@@ -268,7 +273,7 @@ class LSBGDocker(DockWidget):
         self.tLengthSpinBox.valueChanged.connect(self.tLengthSliderUpdate)
         self.tWidthSlider.valueChanged.connect(self.tWidthSpinBoxUpdate)
         self.tWidthSpinBox.valueChanged.connect(self.tWidthSliderUpdate)
-        self.tailAnglePositionSlider.valueChanged.connect(self.tailPositionSpinBoxUpdate)
+        self.tAnglePosSlider.valueChanged.connect(self.tailPositionSpinBoxUpdate)
         self.tAnglePosSpinBox.valueChanged.connect(self.tailPositionSliderUpdate)
         self.flipAngleH.clicked.connect(self.flipAngleH_f)
         self.flipAngleV.clicked.connect(self.flipAngleV_f)
@@ -329,6 +334,7 @@ class LSBGDocker(DockWidget):
         self.updatePreview()
 
     def tLengthSpinBoxUpdate(self):
+        logger.log(LSBG_DEBUG_VERBOSE, f'tail length updated from {self.tLengthSpinBox.value()} to {self.tLengthSlider.value()}')
         self.tLengthSpinBox.setValue(self.tLengthSlider.value())
         self.tailPositions.setEnabled(self.tLengthSlider.value() > 0)
 
@@ -337,6 +343,7 @@ class LSBGDocker(DockWidget):
         self.updatePreview()
 
     def tWidthSpinBoxUpdate(self):
+        logger.log(LSBG_DEBUG_VERBOSE, f'tail width updated from {self.tWidthSpinBox.value()} to {self.tWidthSlider.value()}')
         self.tWidthSpinBox.setValue(self.tWidthSlider.value())
         self.tailPositions.setEnabled(self.tWidthSlider.value() > 0)
 
@@ -345,24 +352,28 @@ class LSBGDocker(DockWidget):
         self.updatePreview()
 
     def tailPositionSpinBoxUpdate(self):
-        self.tAnglePosSpinBox.setValue(self.tailAnglePositionSlider.value())
+        logger.log(LSBG_DEBUG_VERBOSE, f'tail angle position updated from {self.tAnglePosSpinBox.value()} to {self.tAnglePosSlider.value()}')
+        self.tAnglePosSpinBox.setValue(self.tAnglePosSlider.value())
         self.updatePreview()
 
     def tailPositionSliderUpdate(self):
-        if self.tAnglePosSpinBox.value() < 360: self.tailAnglePositionSlider.setValue(self.tAnglePosSpinBox.value())
+        if self.tAnglePosSpinBox.value() < 360: self.tAnglePosSlider.setValue(self.tAnglePosSpinBox.value())
         self.updatePreview()
 
     def flipAngleH_f(self):
         currAngle = self.tAnglePosSpinBox.value()
         if currAngle <= 180: self.tAnglePosSpinBox.setValue(180 - currAngle)
         else: self.tAnglePosSpinBox.setValue(540 - currAngle)
+        logger.log(LSBG_DEBUG_VERBOSE, f'tail angle position updated from {currAngle} to {self.tAnglePosSpinBox.value()}')
         self.updatePreview()
 
     def flipAngleV_f(self):
+        logger.log(LSBG_DEBUG_VERBOSE, f'tail angle position updated from {self.tAnglePosSpinBox.value()} to {360 - self.tAnglePosSpinBox.value()}')
         self.tAnglePosSpinBox.setValue(360 - self.tAnglePosSpinBox.value())
         self.updatePreview()
 
     def flipAngleHV_f(self):
+        logger.log(LSBG_DEBUG_VERBOSE, f'tail angle position updated from {self.tAnglePosSpinBox.value()} to {(self.tAnglePosSpinBox.value() + 180) % 360}')
         self.tAnglePosSpinBox.setValue((self.tAnglePosSpinBox.value() + 180) % 360)
         self.updatePreview()
 
@@ -376,7 +387,6 @@ class LSBGDocker(DockWidget):
         lines = self.bubbleText.toPlainText().split('\n')
         for line in lines: textWidth = QFontMetricsF(font).width(line) if QFontMetricsF(font).width(line) > textWidth else textWidth
         textHeight = QFontMetrics(font).capHeight() + QFontMetricsF(font).lineSpacing()*max(len(lines)-1,0)
-        logger.log(LSBG_DEBUG, f'text height: {textHeight}')
         tailLength = self.tLengthSpinBox.value()
         tailWidth = self.tWidthSpinBox.value()
         bPadding = int(fontSize*1.5)
@@ -416,6 +426,10 @@ class LSBGDocker(DockWidget):
         text = ''
         textStartX = tailLength + bPadding + (textWidth  / 2)
         textStartY = tailLength + bPadding + QFontMetrics(font).capHeight()
+
+        logger.log(LSBG_DEBUG_VERBOSE, f'text font, font size: {QFontInfo(font).family()} {fontSize}, \
+            text width, height: {textWidth} {textHeight}, text start x,y: {textStartX} {textStartY}')
+
         for line in lines:
             text += f'<text x=\"{textStartX}\" y=\"{textStartY}\" \
                 style=\"font-size:{fontSize};font-family:{font.family()}; \
@@ -424,12 +438,22 @@ class LSBGDocker(DockWidget):
 
 
         bubblePath: str = ''
+        # MARK: round
         if self.roundBubble.isChecked():
+
+            logger.log(logging.INFO, f'bubble type: round')
+
             self.tWidthSlider.setMaximum(self.speechFontSize.value()*10)
             theta = self.tAnglePosSpinBox.value() * (2*pi) / 360
             if tailLength > 0 and tailWidth > 0:
                 fourASqr = 4*(bWidth/2)*(bWidth/2)
                 fourBSqr = 4*(bHeight/2)*(bHeight/2)
+
+                if (sqrtDiscriminant := (fourASqr + fourBSqr)*sin(theta)*sin(theta) + fourBSqr) <= 0:
+                    logger.log(logging.ERROR, f'sqrt discriminant not in domain (x>0): {sqrtDiscriminant}')
+                elif (asinDiscriminant := tailWidth / sqrt( (fourASqr + fourBSqr)*sin(theta)*sin(theta) + fourBSqr )) < -1 or asinDiscriminant > 1:
+                    logger.log(logging.ERROR, f'asin discriminant not in domain (-1<x<1): {asinDiscriminant}')
+
                 thetaD = asin(tailWidth / sqrt( (fourASqr + fourBSqr)*sin(theta)*sin(theta) + fourBSqr ))
 
                 tailPointX0 = ((bWidth  / 2)*cos(theta - thetaD)) + (frameWidth  / 2)
@@ -441,6 +465,10 @@ class LSBGDocker(DockWidget):
                 dY = (bHeight / 2) * cos(theta)
                 tailEndX = (bWidth  / 2) * cos(theta) + (frameWidth  / 2) + (max(tailLength,1) * (dY / sqrt(dX*dX + dY*dY)))
                 tailEndY = (bHeight / 2) * sin(theta) + (frameHeight / 2) - (max(tailLength,1) * (dX / sqrt(dX*dX + dY*dY)))
+                
+                logger.log(LSBG_DEBUG_VERBOSE, f'theta: {theta}, thetaD: {thetaD}, \
+                    tail width: {tailWidth}, tail length: {tailLength}, \
+                    tail points: ({tailPointX0},{tailPointY0}) ({tailPointX1},{tailPointY1}) ({tailEndX},{tailEndY})')
 
                 bubblePath = f'M {tailPointX0} {tailPointY0} A {bWidth/2} {bHeight/2} \
                     0 1 0 {tailPointX1} {tailPointY1} L {tailEndX} {tailEndY} Z'
@@ -452,6 +480,7 @@ class LSBGDocker(DockWidget):
                     A {bWidth/2} {bHeight/2} 0 1 0 {ellipsePX-bWidth} {ellipsePY} \
                     A {bWidth/2} {bHeight/2} 0 1 0 {ellipsePX} {ellipsePY} Z'
 
+        # MARK: square
         if self.squareBubble.isChecked():
             horizontalAngleBound = 180*(bWidth /2)/(2*(bWidth/2) + 2*(bHeight/2))
             verticalAngleBound   = 180*(bHeight/2)/(2*(bWidth/2) + 2*(bHeight/2))
@@ -614,9 +643,14 @@ class LSBGDocker(DockWidget):
                     {(bWidth/2)+(frameWidth/2)} {-(bHeight/2)+(frameHeight/2)} \
                     {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} Z'
 
+        # MARK: squircle
         if self.squircleBubble.isChecked(): pass
         # if self.thoughtBubble.isChecked(): pass
         # if self.shoutBubble.isChecked(): pass
+
+        logger.log(LSBG_DEBUG_VERBOSE, f'bubble width, height: {bWidth} {bHeight}, frame width, height: {frameWidth} {frameHeight}, \
+            bubble fill, outline color: {self.bubbleColor.name()} {self.outlineColor.name()}, \
+            bubble outline thickness: {self.bOutlineThicknessSpinBox.value()}')
 
         bubble = f'<path style="fill:{self.bubbleColor.name()};stroke:{self.outlineColor.name()};\
             stroke-width:{self.bOutlineThicknessSpinBox.value()};stroke-linejoin:round\" d=\"{bubblePath}"/>'
@@ -645,11 +679,11 @@ class LSBGDocker(DockWidget):
     def resizeEvent(self, ev: QResizeEvent):
         sameSize = (ev.oldSize().width() == ev.size().width()) and (ev.oldSize().height() == ev.size().height())
         if not sameSize:
-            # logger.log(LSBG_DEBUG, f'{self.scrollMainLayout.widget().width()}')
             scrollBarWidth = 9999
             for c in self.widget().children(): scrollBarWidth = c.width() if c.width() < scrollBarWidth else scrollBarWidth
             if ev.size().width() >= MAINLAYOUT_MIN_WIDTH+(2*MAINLAYOUT_CONTENTS_MARGINS):
                 newWidth = ev.size().width()-(4*scrollBarWidth)-(2*MAINLAYOUT_CONTENTS_MARGINS)
+                logger.log(LSBG_DEBUG_VERBOSE, f'svg widget width updated from {self.preview.width()} to {int(newWidth)}')
                 self.preview.setFixedSize(int(newWidth), int(newWidth*self.bAspectRatio))
 
     def canvasChanged(self, canvas): pass
