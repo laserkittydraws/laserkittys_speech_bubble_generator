@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=Krita/PythonPlugin
+X-KDE-Library=laserkittys_speech_bubble_generator
+X-Python-2-Compatible=false
+X-Krita-Manual=laserkittys_speech_bubble_generator_manual.html
+Name=LaserKitty's Speech Bubble Generator
+Comment=Type text and create a speech bubble around it automatically.

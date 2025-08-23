@@ -1,0 +1,94 @@
+import logging
+
+SPEECH_BUBBLE_BASE_VERSION = '1.0'
+
+class SpeechBubble:
+
+    """
+    Base class for implementing custom speech bubble types
+
+
+    some guides for SVG formatting:
+
+    https://www.w3schools.com/graphics/svg_intro.asp
+
+    https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorials/SVG_from_scratch
+    """
+
+    _width: float
+    _height: float
+
+    _tailAnglePosition: float # 0 <= x <= 360
+    _tailWidth: float
+    _tailLength: float
+    
+    _logger: logging.Logger
+
+    @staticmethod
+    def width() -> float: return SpeechBubble._width
+
+    @staticmethod
+    def setWidth(w: float):
+        if w < 0:
+            SpeechBubble._logger.log(logging.ERROR, f'bubble width can not be less than zero: {w}')
+            raise ValueError(f'bubble width can not be less than zero: {w}')
+        else: SpeechBubble._width = w
+
+    @staticmethod
+    def height() -> float: return SpeechBubble._height
+
+    @staticmethod
+    def setHeight(h: float):
+        if h < 0:
+            SpeechBubble._logger.log(logging.ERROR, f'bubble height can not be less than zero: {h}')
+            raise ValueError(f'bubble width can not be less than zero: {h}')
+        else: SpeechBubble._height = h
+
+    @staticmethod
+    def tailAnglePosition() -> float: return SpeechBubble._tailAnglePosition
+
+    @staticmethod
+    def setTailAnglePosition(a: float):
+        """sets the angle position of the speech bubble tail
+
+        ### Args:
+            a (float): new angle position (0 <= x <= 360)
+
+        ### Raises:
+            ValueError: new angle value out of bounds
+        """
+        if 0 <= a and a <= 360: SpeechBubble._tailAnglePosition = a
+        else: raise ValueError(f'new angle value out of bounds (0 <= x <= 360): {a}')
+
+    @staticmethod
+    def tailWidth() -> float: return SpeechBubble._tailWidth
+
+    @staticmethod
+    def setTailWidth(tW: float):
+        if tW < 0:
+            SpeechBubble._logger.log(logging.ERROR, f'tail width can not be less than zero: {tW}')
+            raise ValueError(f'tail width can not be less than zero: {tW}')
+        else: SpeechBubble._tailWidth = tW
+
+    @staticmethod
+    def tailLength() -> float: return SpeechBubble._tailLength
+
+    @staticmethod
+    def setTailLength(tL: float):
+        if tL < 0:
+            SpeechBubble._logger.log(logging.ERROR, f'tail length can not be less than zero: {tL}')
+            raise ValueError(f'tail length can not be less than zero: {tL}')
+        else: SpeechBubble._tailLength = tL
+
+    @staticmethod
+    def getPreview() -> str:
+        """returns the svg path data for the speech bubble
+
+        ### Returns:
+            svg path data (str)
+        """
+        raise NotImplementedError('subclass method not implemented yet')
+
+    @staticmethod
+    def __repr__() -> str:
+        return f'speech bubble version: {SPEECH_BUBBLE_BASE_VERSION}, tail angle position: {SpeechBubble._tailAnglePosition}, tail width: {SpeechBubble._tailWidth}, tail length: {SpeechBubble._tailLength}'
