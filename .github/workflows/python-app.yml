@@ -5,7 +5,10 @@ name: Python application
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths:
+      - 'laserkittys_speech_bubble_generator/Shapes/**'
   pull_request:
     branches: [ "main" ]
 
