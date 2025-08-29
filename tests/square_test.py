@@ -6,6 +6,7 @@ from laserkittys_speech_bubble_generator.Shapes.squareBubbleBase import SquareBu
 class SquareMethods(unittest.TestCase):
 
     def test_radiusX(self):
+        sb.clear()
         with self.assertRaises(ValueError):
             sb.radiusX(0)
         with self.assertRaises(ValueError):
@@ -23,9 +24,9 @@ class SquareMethods(unittest.TestCase):
         self.assertAlmostEqual(sb.radiusX(2.1), -3.70591674169)
         self.assertAlmostEqual(sb.radiusX(4.3), -2.88788476701)
         self.assertAlmostEqual(sb.radiusX(5.9),              8)
-        sb.clear()
 
     def test_radiusY(self):
+        sb.clear()
         with self.assertRaises(ValueError):
             sb.radiusY(0)
         with self.assertRaises(ValueError):
@@ -43,9 +44,9 @@ class SquareMethods(unittest.TestCase):
         self.assertAlmostEqual(sb.radiusY(2.1),              3)
         self.assertAlmostEqual(sb.radiusY(4.3),             -3)
         self.assertAlmostEqual(sb.radiusY(5.9), -2.68337677334)
-        sb.clear()
 
     def test_radius_x_deriv_norm(self):
+        sb.clear()
         sb.setWidth(0)
         sb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -68,6 +69,7 @@ class SquareMethods(unittest.TestCase):
         sb.clear()
 
     def test_radius_y_deriv_norm(self):
+        sb.clear()
         sb.setWidth(0)
         sb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -87,7 +89,6 @@ class SquareMethods(unittest.TestCase):
         self.assertAlmostEqual(sb.radiusYDerivNorm(2.1), 0)
         self.assertAlmostEqual(sb.radiusYDerivNorm(4.3), 0)
         self.assertAlmostEqual(sb.radiusYDerivNorm(5.9), 1)
-        sb.clear()
 
 if __name__ == '__main__':
     unittest.main()
