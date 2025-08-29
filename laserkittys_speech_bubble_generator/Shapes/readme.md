@@ -1,6 +1,6 @@
 # Speech Bubble Subclass Implementation Guide
 
-The base class already has the attributes along with cooresponding get and set methods:
+The [base class](speech_bubble_base.py) already has the attributes along with cooresponding get and set methods:
 ```python
 _width: float
 _height: float
@@ -37,3 +37,33 @@ class YourSpeechBubbleType(SpeechBubble):
 
 > [!TIP]
 > It is recommended to include log statements within your code implementation of your speech bubble type for debugging. The base class already has a logger to use: `YourSpeechBubbleType._logger`
+
+## Anatomy of a speech bubble
+
+```
+ +--------------------------------------------------------------------------------> X
+ |          tailLength
+ |   <-------->
+ |                                 padding           (  theta = 0 starts  )
+ |                              <---->               ( at the pos x-axis, )
+ |            <---- bubbleWidth  ---->               ( theta increases CW )
+ |                 <-textWidth ->
+ |   +----------------------------------------+                                  /|\
+ |   |                                        |                                   |
+ |   |                                        |                                   |
+ |   |        +----------------------+        | /|\             /|\               | frameHeight
+ |   |        |                      |        |  | padding       |                |
+ |   |        |                      |        | \|/              |                |
+ |   |        |    +------------+    |        | /|\              | bubbleHeight   |
+ |   |        |    |            |    |        |  |               |                |
+ |   |        |    |    text    |    |        |  | textHeight    |                |
+ |   |        |    |            |    |        |  |               |                |
+ |   |        |    +------------+    |        | \|/              |                |
+ |   |        |                      |        |                  |                |
+ |   |        |                      |        |                  |                |
+ |   |        +----------------------+        | /|\             \|/               |
+ |   |          \    /                        |  | tailLength                     |
+ |   |           \  /                         |  |                                |
+\|/  +----------------------------------------+ \|/                              \|/
+ Y
+```
