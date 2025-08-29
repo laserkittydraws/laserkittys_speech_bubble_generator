@@ -35,35 +35,14 @@ class YourSpeechBubbleType(SpeechBubble):
         return f'[your custom attrubtes here], {super.__repr__()}'
 ```
 
+Base classes also exist for `RoundBubble`, `SquareBubble`, and `SquircleBubble` which alread have implemented methods for getting a point on the shape, the radius and its derivative, and the regular and normalized x and y derivative
+
 > [!TIP]
 > It is recommended to include log statements within your code implementation of your speech bubble type for debugging. The base class already has a logger to use: `YourSpeechBubbleType._logger`
 
 ## Anatomy of a speech bubble
 
-```
- +--------------------------------------------------------------------------------> X
- |          tailLength
- |   <-------->
- |                                 padding           (  theta = 0 starts  )
- |                              <---->               ( at the pos x-axis, )
- |            <---- bubbleWidth  ---->               ( theta increases CW )
- |                 <-textWidth ->
- |   +----------------------------------------+                                  /|\
- |   |                                        |                                   |
- |   |                                        |                                   |
- |   |        +----------------------+        | /|\             /|\               | frameHeight
- |   |        |                      |        |  | padding       |                |
- |   |        |                      |        | \|/              |                |
- |   |        |    +------------+    |        | /|\              | bubbleHeight   |
- |   |        |    |            |    |        |  |               |                |
- |   |        |    |    text    |    |        |  | textHeight    |                |
- |   |        |    |            |    |        |  |               |                |
- |   |        |    +------------+    |        | \|/              |                |
- |   |        |                      |        |                  |                |
- |   |        |                      |        |                  |                |
- |   |        +----------------------+        | /|\             \|/               |
- |   |          \    /                        |  | tailLength                     |
- |   |           \  /                         |  |                                |
-\|/  +----------------------------------------+ \|/                              \|/
- Y
-```
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./images/lsbg graphic dark.png">
+    <img alt="Text changing depending on mode. Light: 'So light!' Dark: 'So dark!'" src="./images/lsbg graphic light.png">
+</picture>
