@@ -1,9 +1,10 @@
 from laserkittys_speech_bubble_generator.Shapes.speech_bubble_base import SpeechBubble, SPEECH_BUBBLE_BASE_VERSION
 from laserkittys_speech_bubble_generator.Shapes.misc import Point
-from laserkittys_speech_bubble_generator.config import *
 
 import math
 import warnings
+
+from laserkittys_speech_bubble_generator.config import *
 
 SQUARE_BUBBLE_BASE_VERSION = '1.0'
 

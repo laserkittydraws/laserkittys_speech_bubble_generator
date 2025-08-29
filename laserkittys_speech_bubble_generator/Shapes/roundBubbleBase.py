@@ -1,7 +1,8 @@
 from laserkittys_speech_bubble_generator.Shapes.speech_bubble_base import SpeechBubble, SPEECH_BUBBLE_BASE_VERSION
-from laserkittys_speech_bubble_generator.config import *
 
 import math
+
+from laserkittys_speech_bubble_generator.config import *
 
 ROUND_BUBBLE_BASE_VERSION = '1.0'
 

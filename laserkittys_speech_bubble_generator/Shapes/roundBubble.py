@@ -1,8 +1,9 @@
 from laserkittys_speech_bubble_generator.Shapes.speech_bubble_base import SpeechBubble, SPEECH_BUBBLE_BASE_VERSION
-from laserkittys_speech_bubble_generator.config import *
 
 from math import sin, cos, asin, sqrt
 import logging
+
+from laserkittys_speech_bubble_generator.config import *
 
 class RoundBubble(SpeechBubble):
 
@@ -19,12 +20,12 @@ class RoundBubble(SpeechBubble):
             elif (asinDiscriminant := RoundBubble._tailWidth / sqrt( (fourASqr + fourBSqr)*sin(RoundBubble._tailAnglePosition)*sin(RoundBubble._tailAnglePosition) + fourBSqr )) < -1 or asinDiscriminant > 1:
                 RoundBubble._logger.log(logging.ERROR, f'asin discriminant not in domain (-1<x<1): {asinDiscriminant}')
 
-            tailAnglePositionD = asin(RoundBubble._tailWidth / sqrt( (fourASqr + fourBSqr)*sin(RoundBubble._tailAnglePosition)*sin(RoundBubble._tailAnglePosition) + fourBSqr ))
+            RoundBubble._tailAnglePositionD = asin(RoundBubble._tailWidth / sqrt( (fourASqr + fourBSqr)*sin(RoundBubble._tailAnglePosition)*sin(RoundBubble._tailAnglePosition) + fourBSqr ))
 
-            tailPointX0 = ((RoundBubble._width  / 2)*cos(RoundBubble._tailAnglePosition - tailAnglePositionD)) + ((RoundBubble._width + 2*RoundBubble._tailLength)  / 2)
-            tailPointY0 = ((RoundBubble._height / 2)*sin(RoundBubble._tailAnglePosition - tailAnglePositionD)) + ((RoundBubble._height + 2*RoundBubble._tailLength) / 2)
-            tailPointX1 = ((RoundBubble._width  / 2)*cos(RoundBubble._tailAnglePosition + tailAnglePositionD)) + ((RoundBubble._width + 2*RoundBubble._tailLength)  / 2)
-            tailPointY1 = ((RoundBubble._height / 2)*sin(RoundBubble._tailAnglePosition + tailAnglePositionD)) + ((RoundBubble._height + 2*RoundBubble._tailLength) / 2)
+            tailPointX0 = ((RoundBubble._width  / 2)*cos(RoundBubble._tailAnglePosition - RoundBubble._tailAnglePositionD)) + ((RoundBubble._width + 2*RoundBubble._tailLength)  / 2)
+            tailPointY0 = ((RoundBubble._height / 2)*sin(RoundBubble._tailAnglePosition - RoundBubble._tailAnglePositionD)) + ((RoundBubble._height + 2*RoundBubble._tailLength) / 2)
+            tailPointX1 = ((RoundBubble._width  / 2)*cos(RoundBubble._tailAnglePosition + RoundBubble._tailAnglePositionD)) + ((RoundBubble._width + 2*RoundBubble._tailLength)  / 2)
+            tailPointY1 = ((RoundBubble._height / 2)*sin(RoundBubble._tailAnglePosition + RoundBubble._tailAnglePositionD)) + ((RoundBubble._height + 2*RoundBubble._tailLength) / 2)
 
             dX = (RoundBubble._width  / 2) * sin(RoundBubble._tailAnglePosition) * -1
             dY = (RoundBubble._height / 2) * cos(RoundBubble._tailAnglePosition)

@@ -1,8 +1,9 @@
 from laserkittys_speech_bubble_generator.Shapes.speech_bubble_base import SpeechBubble, SPEECH_BUBBLE_BASE_VERSION
-from laserkittys_speech_bubble_generator.config import *
 
 from math import sin, cos, asin, sqrt
 import logging
+
+from laserkittys_speech_bubble_generator.config import *
 
 class SquareBubble(SpeechBubble):
 

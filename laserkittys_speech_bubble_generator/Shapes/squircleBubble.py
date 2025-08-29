@@ -1,9 +1,10 @@
 from laserkittys_speech_bubble_generator.Shapes.speech_bubble_base import SpeechBubble, SPEECH_BUBBLE_BASE_VERSION
 from laserkittys_speech_bubble_generator.Shapes.misc import Point
-from laserkittys_speech_bubble_generator.config import *
 
 import math
 import logging
+
+from laserkittys_speech_bubble_generator.config import *
 
 def radius(a: float) -> float:
     if (SquircleBubble._width/2) <= 0 or (SquircleBubble._height/2) <= 0: raise ValueError(f'squircle width and height must both be greater than zero: {SquircleBubble._width} {SquircleBubble._height}')
