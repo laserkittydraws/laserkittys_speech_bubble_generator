@@ -43,6 +43,6 @@ Base classes also exist for `RoundBubble`, `SquareBubble`, and `SquircleBubble` 
 ## Anatomy of a speech bubble
 
 <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./images/lsbg graphic dark.png">
-    <img alt="Text changing depending on mode. Light: 'So light!' Dark: 'So dark!'" src="./images/lsbg graphic light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/laserkittydraws/laserkittys_speech_bubble_generator/refs/heads/main/images/lsbg%20graphic%20dark.png">
+    <img src="https://raw.githubusercontent.com/laserkittydraws/laserkittys_speech_bubble_generator/refs/heads/main/images/lsbg%20graphic%20light.png">
 </picture>
