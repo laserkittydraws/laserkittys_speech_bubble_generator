@@ -1,0 +1,3 @@
+verbose_debugging_level : 15
+minimal_debugging_level : 16
+logging_level : "VERBOSE"

@@ -6,12 +6,17 @@ from PyQt5.QtCore import Qt, QRect, QSize
 from krita import Krita, DockWidget, DockWidgetFactory, DockWidgetFactoryBase
 
 from math import cos, sin, acos, asin, sqrt, pi
-import xml.etree.ElementTree as ET
 from datetime import datetime
 
-from laserkittys_speech_bubble_generator.config import LSBG_DEBUG_MINIMAL, LSBG_DEBUG_VERBOSE, LSBG_LOGGING_LEVEL
+from laserkittys_speech_bubble_generator import Shapes
 from laserkittys_speech_bubble_generator.Shapes import *
 
+import yaml
+with open('config.yml', 'r') as f:
+    config = yaml.safe_load(f)
+    LSBG_DEBUG_VERBOSE = config['verbose_debugging_level']
+    LSBG_DEBUG_MINIMAL = config['minimal_debugging_level']
+    LSBG_LOGGING_LEVEL = config['logging_level']
 
 import logging
 logger = logging.getLogger('lsbg')
@@ -22,9 +27,8 @@ logging.basicConfig(
     format='[%(levelname)s]: %(name)s - %(message)s',
     level=LSBG_DEBUG_VERBOSE if LSBG_LOGGING_LEVEL == 'VERBOSE' else LSBG_DEBUG_MINIMAL
 )
-RoundBubble._logger    = logger.getChild(RoundBubble.__name__)
-SquareBubble._logger   = logger.getChild(SquareBubble.__name__)
-SquircleBubble._logger = logger.getChild(SquircleBubble.__name__)
+logging.captureWarnings(True)
+for bType in Shapes.__all__: getattr(Shapes,bType)._logger = logger.getChild(getattr(Shapes,bType).__name__)
 logger.info(f'Krita version: {Application.version()}')
 LSBG_PLUGIN_VERSION = '0.3.0' ; logger.info(f'LSBG version: {LSBG_PLUGIN_VERSION}')
 
@@ -92,9 +96,11 @@ class LSBGDocker(DockWidget):
         # self.shoutBubble.setDisabled(True)
         # self.bubbleTypesLayout.addWidget(self.shoutBubble)
 
+
         # TODO: change bubble type selection to a dropdown
         # self.bubbleType = QComboBox()
-        # self.bubbleType.addItems([...bubble types...])
+        # for bubble in Shapes.__all__:
+        #     self.bubbleType.addItem(bubble)
         # self.bubbleTypesLayout.addWidget(self.bubbleType)
 
         self.bubbleColorButton = QPushButton(self)
@@ -275,6 +281,9 @@ class LSBGDocker(DockWidget):
         self.addOnPage.clicked.connect(self.addOnPageShape)
         
         # bubble type signals
+        
+        # self.bubbleType.currentIndexChanged.connect(self.updatePreview) # TODO: passes new index to updatePreview
+        
         self.roundBubble.clicked.connect(self.updatePreview)
         self.squareBubble.clicked.connect(self.updatePreview)
         self.squircleBubble.clicked.connect(self.updatePreview)
