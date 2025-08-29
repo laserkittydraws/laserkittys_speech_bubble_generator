@@ -6,6 +6,7 @@ from laserkittys_speech_bubble_generator.Shapes.squircleBubbleBase import Squirc
 class SquircleMethods(unittest.TestCase):
 
     def test_radius(self):
+        sb.clear()
         with self.assertRaises(ValueError):
             sb.radius(0)
         with self.assertRaises(ValueError):
@@ -36,6 +37,7 @@ class SquircleMethods(unittest.TestCase):
         self.assertAlmostEqual(sb.radius(5.9), 273.638606804)
 
     def test_radius_deriv(self):
+        sb.clear()
         sb.setWidth(0)
         sb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -68,6 +70,7 @@ class SquircleMethods(unittest.TestCase):
         self.assertAlmostEqual(sb.radiusDeriv(5.9),  35.4822890108)
 
     def test_radius_x_deriv(self):
+        sb.clear()
         sb.setWidth(0)
         sb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -100,6 +103,7 @@ class SquircleMethods(unittest.TestCase):
         self.assertAlmostEqual(sb.radiusXDeriv(5.9),  135.216147412)
 
     def test_radius_y_deriv(self):
+        sb.clear()
         sb.setWidth(0)
         sb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -132,6 +136,7 @@ class SquircleMethods(unittest.TestCase):
         self.assertAlmostEqual(sb.radiusYDeriv(5.9),  240.527905754)
 
     def test_radius_x_deriv_norm(self):
+        sb.clear()
         sb.setWidth(0)
         sb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -164,6 +169,7 @@ class SquircleMethods(unittest.TestCase):
         self.assertAlmostEqual(sb.radiusXDerivNorm(5.9),  0.490038779493)
 
     def test_radius_y_deriv_norm(self):
+        sb.clear()
         sb.setWidth(0)
         sb.setHeight(0)
         with self.assertRaises(ValueError):
