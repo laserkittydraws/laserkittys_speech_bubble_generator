@@ -6,6 +6,7 @@ from laserkittys_speech_bubble_generator.Shapes.roundBubbleBase import RoundBubb
 class RoundMethods(unittest.TestCase):
 
     def test_radius(self):
+        rb.clear()
         with self.assertRaises(ValueError):
             rb.radius(0)
         with self.assertRaises(ValueError):
@@ -25,6 +26,7 @@ class RoundMethods(unittest.TestCase):
         self.assertAlmostEqual(rb.radius(5.9), 5.87499777022)
 
     def test_radius_deriv(self):
+        rb.clear()
         rb.setWidth(0)
         rb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -46,6 +48,7 @@ class RoundMethods(unittest.TestCase):
         self.assertAlmostEqual(rb.radiusDeriv(5.9),  6.71421900277)
 
     def test_radius_x_deriv(self):
+        rb.clear()
         rb.setWidth(0)
         rb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -67,6 +70,7 @@ class RoundMethods(unittest.TestCase):
         self.assertAlmostEqual(rb.radiusXDeriv(5.9),  8.42381787657)
 
     def test_radius_y_deriv(self):
+        rb.clear()
         rb.setWidth(0)
         rb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -88,6 +92,7 @@ class RoundMethods(unittest.TestCase):
         self.assertAlmostEqual(rb.radiusYDeriv(5.9),   2.93864390486)
 
     def test_radius_x_deriv_norm(self):
+        rb.clear()
         rb.setWidth(0)
         rb.setHeight(0)
         with self.assertRaises(ValueError):
@@ -109,6 +114,7 @@ class RoundMethods(unittest.TestCase):
         self.assertAlmostEqual(rb.radiusXDerivNorm(5.9),  0.94419659849)
 
     def test_radius_y_deriv_norm(self):
+        rb.clear()
         rb.setWidth(0)
         rb.setHeight(0)
         with self.assertRaises(ValueError):
