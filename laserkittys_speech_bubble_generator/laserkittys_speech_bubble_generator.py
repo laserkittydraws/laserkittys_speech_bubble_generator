@@ -12,7 +12,7 @@ from laserkittys_speech_bubble_generator import Shapes
 from laserkittys_speech_bubble_generator.Shapes import *
 
 import yaml
-with open('config.yml', 'r') as f:
+with open('config.yml', 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)
     LSBG_DEBUG_VERBOSE = config['verbose_debugging_level']
     LSBG_DEBUG_MINIMAL = config['minimal_debugging_level']
