@@ -1,4 +1,4 @@
-from laserkittys_speech_bubble_generator.speech_bubble_base import SpeechBubble, SPEECH_BUBBLE_BASE_VERSION
+from laserkittys_speech_bubble_generator.Shapes.speech_bubble_base import SpeechBubble, SPEECH_BUBBLE_BASE_VERSION
 from laserkittys_speech_bubble_generator.config import *
 
 from math import sin, cos, asin, sqrt
@@ -6,9 +6,10 @@ import logging
 
 class SquareBubble(SpeechBubble):
 
-    _logger: logging.Logger
+    _logger: logging.Logger = None
 
     def getPreview() -> str:
+        if SquareBubble._width <= 0 or SquareBubble._height <= 0: raise ValueError(f'bubble width and height can not be zero: {SquareBubble._width} {SquareBubble._height}')
         A0 =                              -0.5*(SquareBubble._height/2)/(2*(SquareBubble._width/2) + 2*(SquareBubble._height/2))
         A1 =                               0.5*(SquareBubble._height/2)/(2*(SquareBubble._width/2) + 2*(SquareBubble._height/2)) # upper right corner
         A2 =   ((SquareBubble._width/2) + 0.5*(SquareBubble._height/2))/(2*(SquareBubble._width/2) + 2*(SquareBubble._height/2)) # upper left corner
@@ -22,7 +23,8 @@ class SquareBubble(SpeechBubble):
             if A2 <= a < A3: return -(SquareBubble._width/2)
             if A3 <= a < A4: return (-1 + 2*(a-A3)/(A4-A3))*(SquareBubble._width/2)
             if A4 <= a < A5: return (SquareBubble._width/2)
-            SquareBubble._logger.log(LSBG_DEBUG_VERBOSE, f'angle value not in range: {360*a}')
+            if SquareBubble._logger is not None:
+                SquareBubble._logger.log(LSBG_DEBUG_VERBOSE, f'angle value not in range: {360*a}')
             raise ValueError(f'value not in range: {a}')
 
         def squareBubbleY(a):
@@ -31,7 +33,8 @@ class SquareBubble(SpeechBubble):
             if A2 <= a < A3: return (1 - 2*(a-A2)/(A3-A2))*(SquareBubble._height/2)
             if A3 <= a < A4: return -(SquareBubble._height/2)
             if A4 <= a < A5: return (-1 + (a-A4)/(1-A4))*(SquareBubble._height/2)
-            SquareBubble._logger.log(LSBG_DEBUG_VERBOSE, f'angle value not in range: {360*a}')
+            if SquareBubble._logger is not None:
+                SquareBubble._logger.log(LSBG_DEBUG_VERBOSE, f'angle value not in range: {360*a}')
             raise ValueError(f'value not in range: {a}')
 
         tailPointX0 = squareBubbleX((SquareBubble._tailAnglePosition-SquareBubble._tailWidth)/360)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)
@@ -46,11 +49,7 @@ class SquareBubble(SpeechBubble):
             #    +----------------+
             tailEndX = squareBubbleX(SquareBubble._tailAnglePosition/360)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)+SquareBubble._tailLength
             tailEndY = squareBubbleY(SquareBubble._tailAnglePosition/360)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)
-            bubblePath = f'M {tailPointX0} {tailPointY0} L {tailEndX} {tailEndY} \
-                {tailPointX1} {tailPointY1} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
+            bubblePath = f'M {tailPointX0} {tailPointY0} L {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
         elif (SquareBubble._tailAnglePosition/360) < A1+(SquareBubble._tailWidth/360): # upper right corner
             #                          *
             #                        *
@@ -61,11 +60,7 @@ class SquareBubble(SpeechBubble):
             #     +----------------+
             tailEndX = (SquareBubble._width /2)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)+(0.5*sqrt(2)*SquareBubble._tailLength)
             tailEndY = (SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)+(0.5*sqrt(2)*SquareBubble._tailLength)
-            bubblePath = f'M {tailPointX0} {tailPointY0} L \
-                {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
+            bubblePath = f'M {tailPointX0} {tailPointY0} L {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
         elif (SquareBubble._tailAnglePosition/360) < A2-(SquareBubble._tailWidth/360): # upper wall
             #                /\
             #     +----------------+
@@ -75,12 +70,7 @@ class SquareBubble(SpeechBubble):
             #     +----------------+
             tailEndX = squareBubbleX(SquareBubble._tailAnglePosition/360)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)
             tailEndY = squareBubbleY(SquareBubble._tailAnglePosition/360)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)+SquareBubble._tailLength
-            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
+            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
         elif (SquareBubble._tailAnglePosition/360) < A2+(SquareBubble._tailWidth/360): # upper left corner
             # *
             #   *
@@ -91,11 +81,7 @@ class SquareBubble(SpeechBubble):
             #     +----------------+
             tailEndX = -(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)-(0.5*sqrt(2)*SquareBubble._tailLength)
             tailEndY = (SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)+(0.5*sqrt(2)*SquareBubble._tailLength)
-            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
+            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
         elif (SquareBubble._tailAnglePosition/360) < A3-(SquareBubble._tailWidth/360): # left wall
             #     +----------------+
             #     |                |
@@ -104,12 +90,7 @@ class SquareBubble(SpeechBubble):
             #     +----------------+
             tailEndX = squareBubbleX(SquareBubble._tailAnglePosition/360)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)-SquareBubble._tailLength
             tailEndY = squareBubbleY(SquareBubble._tailAnglePosition/360)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)
-            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
+            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
         elif (SquareBubble._tailAnglePosition/360) < A3+(SquareBubble._tailWidth/360): # lower left corner
             #     +----------------+
             #     |                |
@@ -120,11 +101,7 @@ class SquareBubble(SpeechBubble):
             # *
             tailEndX = -(SquareBubble._width /2)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)-(0.5*sqrt(2)*SquareBubble._tailLength)
             tailEndY = -(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)-(0.5*sqrt(2)*SquareBubble._tailLength)
-            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
+            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
         elif (SquareBubble._tailAnglePosition/360) < A4-(SquareBubble._tailWidth/360): # lower wall
             #     +----------------+
             #     |                |
@@ -134,12 +111,7 @@ class SquareBubble(SpeechBubble):
             #                \/
             tailEndX = squareBubbleX(SquareBubble._tailAnglePosition/360)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)
             tailEndY = squareBubbleY(SquareBubble._tailAnglePosition/360)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)-SquareBubble._tailLength
-            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
+            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} Z'
         elif (SquareBubble._tailAnglePosition/360) < A4+(SquareBubble._tailWidth/360): # lower right corner
             #     +----------------+
             #     |                |
@@ -150,10 +122,7 @@ class SquareBubble(SpeechBubble):
             #                          *
             tailEndX =  (SquareBubble._width /2)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)+(0.5*sqrt(2)*SquareBubble._tailLength)
             tailEndY = -(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)-(0.5*sqrt(2)*SquareBubble._tailLength)
-            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} Z'
+            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} Z'
         elif (SquareBubble._tailAnglePosition/360) < A5: # right wall
             #     +----------------+
             #     |                |
@@ -162,12 +131,9 @@ class SquareBubble(SpeechBubble):
             #     +----------------+
             tailEndX = squareBubbleX(SquareBubble._tailAnglePosition/360)+((SquareBubble._width + 2*SquareBubble._tailLength) /2)+SquareBubble._tailLength
             tailEndY = squareBubbleY(SquareBubble._tailAnglePosition/360)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)
-            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} \
-                {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} Z'
+            bubblePath = f'M {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} L {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {(SquareBubble._width/2)+((SquareBubble._width + 2*SquareBubble._tailLength)/2)} {-(SquareBubble._height/2)+((SquareBubble._height + 2*SquareBubble._tailLength)/2)} {tailPointX0} {tailPointY0} {tailEndX} {tailEndY} {tailPointX1} {tailPointY1} Z'
 
-        SquareBubble._logger.log(LSBG_DEBUG_VERBOSE, f'angle values: {360*A0}, {360*A1}, {360*A2}, {360*A3}, {360*A4}, {360*A5}')
+        if SquareBubble._logger is not None:
+            SquareBubble._logger.log(LSBG_DEBUG_VERBOSE, f'angle values: {360*A0}, {360*A1}, {360*A2}, {360*A3}, {360*A4}, {360*A5}')
 
         return bubblePath

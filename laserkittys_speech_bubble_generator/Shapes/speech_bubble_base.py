@@ -1,6 +1,6 @@
 import logging
 
-SPEECH_BUBBLE_BASE_VERSION = '1.0'
+SPEECH_BUBBLE_BASE_VERSION = '1.1'
 
 class SpeechBubble:
 
@@ -15,17 +15,42 @@ class SpeechBubble:
     https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorials/SVG_from_scratch
     """
 
-    _width: float
-    _height: float
+    _width: float = 0
+    _height: float = 0
 
-    _tailAnglePosition: float # 0 <= x <= 360
-    _tailWidth: float
-    _tailLength: float
+    _tailAnglePosition: float = 0 # 0 <= x <= 360
+    _tailWidth: float = 0
+    _tailLength: float = 0
     
-    _logger: logging.Logger
+    _logger: logging.Logger = None
 
     @staticmethod
-    def width() -> float: return SpeechBubble._width
+    def radius(a: float):
+        raise NotImplementedError
+
+    @staticmethod
+    def radiusDeriv(a: float):
+        raise NotImplementedError
+
+    @staticmethod
+    def radiusXDeriv(a: float):
+        raise NotImplementedError
+
+    @staticmethod
+    def radiusYDeriv(a: float):
+        raise NotImplementedError
+
+    @staticmethod
+    def radiusXDerivNorm(a: float):
+        raise NotImplementedError
+
+    @staticmethod
+    def radiusYDerivNorm(a: float):
+        raise NotImplementedError
+
+    @staticmethod
+    def width() -> float:
+        return SpeechBubble._width
 
     @staticmethod
     def setWidth(w: float):
@@ -35,7 +60,8 @@ class SpeechBubble:
         else: SpeechBubble._width = w
 
     @staticmethod
-    def height() -> float: return SpeechBubble._height
+    def height() -> float:
+        return SpeechBubble._height
 
     @staticmethod
     def setHeight(h: float):
@@ -45,11 +71,13 @@ class SpeechBubble:
         else: SpeechBubble._height = h
 
     @staticmethod
-    def tailAnglePosition() -> float: return SpeechBubble._tailAnglePosition
+    def tailAnglePosition() -> float:
+        return SpeechBubble._tailAnglePosition
 
     @staticmethod
     def setTailAnglePosition(a: float):
-        """sets the angle position of the speech bubble tail
+        """
+        sets the angle position of the speech bubble tail
 
         ### Args:
             a (float): new angle position (0 <= x <= 360)
@@ -61,7 +89,8 @@ class SpeechBubble:
         else: raise ValueError(f'new angle value out of bounds (0 <= x <= 360): {a}')
 
     @staticmethod
-    def tailWidth() -> float: return SpeechBubble._tailWidth
+    def tailWidth() -> float:
+        return SpeechBubble._tailWidth
 
     @staticmethod
     def setTailWidth(tW: float):
@@ -71,7 +100,8 @@ class SpeechBubble:
         else: SpeechBubble._tailWidth = tW
 
     @staticmethod
-    def tailLength() -> float: return SpeechBubble._tailLength
+    def tailLength() -> float:
+        return SpeechBubble._tailLength
 
     @staticmethod
     def setTailLength(tL: float):
@@ -81,8 +111,32 @@ class SpeechBubble:
         else: SpeechBubble._tailLength = tL
 
     @staticmethod
+    def setup(
+        width: float = 0,
+        height: float = 0,
+        tailAnglePosition: float = 0,
+        tailWidth: float = 0,
+        tailLength: float = 0
+    ) -> None:
+
+        SpeechBubble._width = width
+        SpeechBubble._height = height
+        SpeechBubble._tailAnglePosition = tailAnglePosition
+        SpeechBubble._tailWidth = tailWidth
+        SpeechBubble._tailLength = tailLength
+
+    @staticmethod
+    def clear() -> None:
+        SpeechBubble._width = 0
+        SpeechBubble._height = 0
+        SpeechBubble._tailAnglePosition = 0
+        SpeechBubble._tailWidth = 0
+        SpeechBubble._tailLength = 0
+
+    @staticmethod
     def getPreview() -> str:
-        """returns the svg path data for the speech bubble
+        """
+        returns the svg path data for the speech bubble
 
         ### Returns:
             svg path data (str)
@@ -91,4 +145,4 @@ class SpeechBubble:
 
     @staticmethod
     def __repr__() -> str:
-        return f'speech bubble version: {SPEECH_BUBBLE_BASE_VERSION}, tail angle position: {SpeechBubble._tailAnglePosition}, tail width: {SpeechBubble._tailWidth}, tail length: {SpeechBubble._tailLength}'
+        return f'speech bubble base version: {SPEECH_BUBBLE_BASE_VERSION}, tail angle position: {SpeechBubble._tailAnglePosition}, tail width: {SpeechBubble._tailWidth}, tail length: {SpeechBubble._tailLength}\n'
