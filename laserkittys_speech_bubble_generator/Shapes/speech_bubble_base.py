@@ -21,7 +21,7 @@ class SpeechBubble:
     _tailAnglePosition: float = 0 # 0 <= x <= 360
     _tailWidth: float = 0
     _tailLength: float = 0
-    
+
     _logger: logging.Logger = None
 
     @staticmethod

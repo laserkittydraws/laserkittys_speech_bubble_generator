@@ -1,6 +1,6 @@
 class Point:
     """
-    basically a fancy 2D tuple
+    basically a fancy tuple
     """
 
     x: float

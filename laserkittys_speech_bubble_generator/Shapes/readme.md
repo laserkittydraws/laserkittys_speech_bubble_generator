@@ -1,14 +1,5 @@
 # Speech Bubble Subclass Implementation Guide
 
-The [base class](speech_bubble_base.py) already has the attributes along with cooresponding get and set methods:
-```python
-_width: float
-_height: float
-_tailAnglePosition: float # 0 <= x <= 360
-_tailWidth: float
-_tailLength: float
-```
-
 ## Boilerplate
 
 ```python
