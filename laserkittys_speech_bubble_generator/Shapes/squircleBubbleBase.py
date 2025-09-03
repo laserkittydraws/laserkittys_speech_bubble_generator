@@ -67,6 +67,14 @@ class SquircleBubbleBase(SpeechBubble):
         return ((SquircleBubbleBase.radius(a))*(math.cos(a))) + ((SquircleBubbleBase.radiusDeriv(a))*(math.sin(a)))
 
     @staticmethod
+    def radiusDerivVec(a):
+        return Point(SquircleBubbleBase.radiusXDerivNorm(a), SquircleBubbleBase.radiusYDerivNorm(a))
+
+    @staticmethod
+    def radiusMagnitude(a):
+        return math.sqrt( (SquircleBubbleBase.radiusXDeriv(a)**2) + (SquircleBubbleBase.radiusYDeriv(a)**2) )
+
+    @staticmethod
     def radiusXDerivNorm(a: float) -> float:
         """
         returns the normalized change in the x-direction of the change in the distance from the origin to a point on the squircle given some angle a (0 <= x <= 2pi)
@@ -87,6 +95,10 @@ class SquircleBubbleBase(SpeechBubble):
         yDeriv = SquircleBubbleBase.radiusYDeriv(a)
         ret: float = yDeriv/( ((xDeriv*xDeriv) + (yDeriv*yDeriv))**0.5 )
         return ret
+
+    @staticmethod
+    def radiusDerivNormVec(a) -> Point:
+        return Point(SquircleBubbleBase.radiusXDerivNorm(a), SquircleBubbleBase.radiusYDerivNorm(a))
 
     @staticmethod
     def squirclePoint(a: float) -> Point:

@@ -42,6 +42,9 @@ Some guides for SVG formatting:
 #### `radiusDeriv()`
     returns the derivative of the radius of the squircle at a given angle
 
+#### `radiusDerivVec()`
+    returns the derivative vector at a point on the squircle given an angle
+
 #### `radiusXDeriv()`
     returns the derivative of the squircle in the x-direction at a given angle
 
@@ -53,6 +56,12 @@ Some guides for SVG formatting:
 
 #### `radiusYDerivNorm()`
     returns the normalized derivative of the squircle in the y-direction at a given angle
+
+#### `radiusDerivNormVec()`
+    returns the normalized derivative vector at a point on the squircle given an angle
+
+#### `SquircleBubblePoint()`
+    returns a Point on the squircle
 
 <details>
 

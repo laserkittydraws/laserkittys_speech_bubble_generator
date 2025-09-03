@@ -1,30 +1,42 @@
-# SpeechBubble
+# ThoughtBubble
 
 <div style="text-align:center">
 
 ```mermaid
-graph TD;
-SpeechBubble
+graph BT;
+RoundBubbleBase --> SpeechBubble;
+ThoughtBubble --> RoundBubbleBase;
 ```
 
 </div>
 
 ## Description
 
-Base class for implementing custom speech bubble types.
+Thought bubble class that implements the `RoundBubbleBase` class
 
 Some guides for SVG formatting:
 - https://www.w3schools.com/graphics/svg_intro.asp
 - https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorials/SVG_from_scratch
 
 ## Attributes
+
+<details>
+
+<summary>Attributes inherited from RoundBubbleBase</summary>
+
 - `_width` float
 - `_height` float
 - `_tailAnglePosition` float
 - `_tailWidth` float
 - `_tailLength` float
 
+</details>
+
 ## Methods
+
+<details>
+
+<summary>Methods inherited from RoundBubbleBase</summary>
 
 #### `clear()`
     resets all attributes to zero
@@ -36,28 +48,22 @@ Some guides for SVG formatting:
     returns the height of the bubble
 
 #### `radius()`
-    not implemented
+    returns the radius of the ellipse at a given angle
 
 #### `radiusDeriv()`
-    not implemented
-
-#### `radiusDerivVec()`
-    not implemented
+    returns the derivative of the radius of the ellipse at a given angle
 
 #### `radiusXDeriv()`
-    not implemented
+    returns the derivative of the ellipse in the x-direction at a given angle
 
 #### `radiusXDerivNorm()`
-    not implemented
+    returns the normalized derivative of the ellipse in the x-direction at a given angle
 
 #### `radiusYDeriv()`
-    not implemented
+    returns the derivative of the ellipse in the y-direction at a given angle
 
 #### `radiusYDerivNorm()`
-    not implemented
-
-#### `radiusDerivNormVec()`
-    not implemented
+    returns the normalized derivative of the ellipse in the y-direction at a given angle
 
 #### `setHeight()`
     sets the height of the bubble
@@ -88,3 +94,5 @@ Some guides for SVG formatting:
 
 #### `width()`
     returns the width of the bubble
+
+</details>

@@ -39,6 +39,9 @@ Some guides for SVG formatting:
 #### `radiusDeriv()`
     returns the derivative of the radius of the square bubble at a given angle
 
+#### `radiusDerivVec()`
+    not implemented
+
 #### `radiusX()`
     returns the x-position of a point on the square bubble at a given angle
 
@@ -56,6 +59,12 @@ Some guides for SVG formatting:
 
 #### `radiusYDerivNorm()`
     returns the normalized derivative of the square bubble in the y-direction at a given angle
+
+#### `radiusDerivNormVec()`
+    returns the normalized derivative vector at a point on the ellipse given an angle
+
+#### `SquareBubblePoint()`
+    returns a Point on the square bubble
 
 <details>
 

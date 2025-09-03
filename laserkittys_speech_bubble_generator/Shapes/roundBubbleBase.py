@@ -1,10 +1,11 @@
 from laserkittys_speech_bubble_generator.Shapes.speech_bubble_base import SpeechBubble, SPEECH_BUBBLE_BASE_VERSION
+from laserkittys_speech_bubble_generator.Shapes.misc import Point
 
 import math
 
 from laserkittys_speech_bubble_generator.config import *
 
-ROUND_BUBBLE_BASE_VERSION = '1.0'
+ROUND_BUBBLE_BASE_VERSION = '1.1'
 
 class RoundBubbleBase(SpeechBubble):
 
@@ -65,6 +66,14 @@ class RoundBubbleBase(SpeechBubble):
         return ((RoundBubbleBase.radius(a))*(math.cos(a))) + ((RoundBubbleBase.radiusDeriv(a))*(math.sin(a)))
 
     @staticmethod
+    def radiusDerivVec(a):
+        return Point(RoundBubbleBase.radiusXDeriv(a), RoundBubbleBase.radiusYDeriv(a))
+
+    @staticmethod
+    def radiusMagnitude(a):
+        return math.sqrt( (RoundBubbleBase.radiusXDeriv(a)**2) + (RoundBubbleBase.radiusYDeriv(a)**2) )
+
+    @staticmethod
     def radiusXDerivNorm(a: float) -> float:
         """
         returns the normalized change in the x-direction of the change in the distance between the origin and a point on the ellipse given an angle a
@@ -91,7 +100,11 @@ class RoundBubbleBase(SpeechBubble):
         return ret
 
     @staticmethod
-    def RoundBubblePoint(a: float) -> tuple[float,float]:
+    def radiusDerivNormVec(a) -> Point:
+        return Point(RoundBubbleBase.radiusXDerivNorm(a), RoundBubbleBase.radiusYDerivNorm(a))
+
+    @staticmethod
+    def RoundBubblePoint(a: float) -> Point:
         """
         takes an angle 'a' and returns a point on the bubble
 
@@ -106,7 +119,7 @@ class RoundBubbleBase(SpeechBubble):
         yp: float = (RoundBubbleBase.radius(a)*math.sin(a))+(RoundBubbleBase._height/2)+RoundBubbleBase._tailLength
         if RoundBubbleBase._logger is not None:
             RoundBubbleBase._logger.log(LSBG_DEBUG_VERBOSE, f'point x,y: {xp} {yp}')
-        return (xp, yp)
+        return Point(xp, yp)
 
     @staticmethod
     def __repr__() -> str:

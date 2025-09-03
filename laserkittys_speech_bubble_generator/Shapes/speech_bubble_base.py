@@ -1,6 +1,10 @@
+from laserkittys_speech_bubble_generator.Shapes.misc import Point
+
+import math
+
 import logging
 
-SPEECH_BUBBLE_BASE_VERSION = '1.1'
+SPEECH_BUBBLE_BASE_VERSION = '1.2'
 
 class SpeechBubble:
 
@@ -25,27 +29,39 @@ class SpeechBubble:
     _logger: logging.Logger = None
 
     @staticmethod
-    def radius(a: float):
+    def radius(a: float) -> float:
         raise NotImplementedError
 
     @staticmethod
-    def radiusDeriv(a: float):
+    def radiusDeriv(a: float) -> float:
         raise NotImplementedError
 
     @staticmethod
-    def radiusXDeriv(a: float):
+    def radiusXDeriv(a: float) -> float:
         raise NotImplementedError
 
     @staticmethod
-    def radiusYDeriv(a: float):
+    def radiusYDeriv(a: float) -> float:
         raise NotImplementedError
 
     @staticmethod
-    def radiusXDerivNorm(a: float):
+    def radiusDerivVec(a: float) -> Point:
         raise NotImplementedError
 
     @staticmethod
-    def radiusYDerivNorm(a: float):
+    def radiusMagnitude(a: float) -> float:
+        raise NotImplementedError
+
+    @staticmethod
+    def radiusXDerivNorm(a: float) -> float:
+        raise NotImplementedError
+
+    @staticmethod
+    def radiusYDerivNorm(a: float) -> float:
+        raise NotImplementedError
+
+    @staticmethod
+    def radiusDerivNormVec(a: float) -> Point:
         raise NotImplementedError
 
     @staticmethod
@@ -53,7 +69,7 @@ class SpeechBubble:
         return SpeechBubble._width
 
     @staticmethod
-    def setWidth(w: float):
+    def setWidth(w: float) -> None:
         if w < 0:
             SpeechBubble._logger.log(logging.ERROR, f'bubble width can not be less than zero: {w}')
             raise ValueError(f'bubble width can not be less than zero: {w}')
@@ -64,7 +80,7 @@ class SpeechBubble:
         return SpeechBubble._height
 
     @staticmethod
-    def setHeight(h: float):
+    def setHeight(h: float) -> None:
         if h < 0:
             SpeechBubble._logger.log(logging.ERROR, f'bubble height can not be less than zero: {h}')
             raise ValueError(f'bubble width can not be less than zero: {h}')
@@ -93,7 +109,7 @@ class SpeechBubble:
         return SpeechBubble._tailWidth
 
     @staticmethod
-    def setTailWidth(tW: float):
+    def setTailWidth(tW: float) -> None:
         if tW < 0:
             SpeechBubble._logger.log(logging.ERROR, f'tail width can not be less than zero: {tW}')
             raise ValueError(f'tail width can not be less than zero: {tW}')
@@ -104,7 +120,7 @@ class SpeechBubble:
         return SpeechBubble._tailLength
 
     @staticmethod
-    def setTailLength(tL: float):
+    def setTailLength(tL: float) -> None:
         if tL < 0:
             SpeechBubble._logger.log(logging.ERROR, f'tail length can not be less than zero: {tL}')
             raise ValueError(f'tail length can not be less than zero: {tL}')

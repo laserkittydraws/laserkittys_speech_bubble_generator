@@ -39,6 +39,9 @@ Some guides for SVG formatting:
 #### `radiusDeriv()`
     returns the derivative of the radius of the ellipse at a given angle
 
+#### `radiusDerivVec()`
+    returns the derivative vector at a point on the ellipse given an angle
+
 #### `radiusXDeriv()`
     returns the derivative of the ellipse in the x-direction at a given angle
 
@@ -50,6 +53,12 @@ Some guides for SVG formatting:
 
 #### `radiusYDerivNorm()`
     returns the normalized derivative of the ellipse in the y-direction at a given angle
+
+#### `radiusDerivNormVec()`
+    returns the normalized derivative vector at a point on the ellipse given an angle
+
+#### `RoundBubblePoint()`
+    returns a Point on the ellipse
 
 <details>
 
